@@ -1,0 +1,17 @@
+names,owners,dtype,description,stats_needed
+possessions_points,player,float,#pss_played_tot/#pts_played_tot,"['pts_played_tot', 'pss_played_tot']"
+o_possessions_points,player,float,#pss_played_o/#pts_played_o,"['pts_played_o', 'pss_played_o']"
+d_possessions_points,player,float,#pss_played_d/#pts_played_d,"['pts_played_d', 'pss_played_d']"
+player_pm,player,float,plus-minus=TODO: ...,[]
+scoring_impact,player,float,pt where player in lineup #scored_us / #pss_played_o,"['lineup', 'scored_us', 'pss_played_o']"
+tov_recovery_impact,player,float,"pt where player in lineup, ps where tov_rec_ps=(start_offensive_pt && !offensive_ps): #(tov_rec_ps && !scored_ps) / #tov_rec_ps","['lineup', 'start_offensive_pt', 'offensive_ps', 'scored_ps']"
+break_efficiency,player,float,"pt where player in lineup, ps where break_chance_ps=(!start_offensive_ps && offensive_ps): #break / #break_chance_ps","['lineup', 'start_offensive_ps', 'offensive_ps']"
+impact_metric,player,float,scoring_impact+tov_recovery_impact+break_efficiency,[]
+possessions_points_X,team,float,,[]
+o_possessions_points_X,team,float,,[]
+d_possessions_points_X,team,float,,[]
+team_pm_X,team,float,,[]
+scoring_impact_X,team,float,,[]
+tov_recovery_impact_X,team,float,,[]
+break_efficiency_X,team,float,,[]
+impact_metric_X,team,float,,[]
