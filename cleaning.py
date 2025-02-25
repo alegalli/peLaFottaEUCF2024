@@ -75,7 +75,7 @@ input_stats = {
 }
 input_stats_df = pd.DataFrame(input_stats)
 # print(input_stats_df.to_string())
-input_stats_df.to_csv(cleaned_data_dir / "def_stats.csv", index=False)
+# input_stats_df.to_csv(cleaned_data_dir / "def_stats.csv", index=False)
 
 
 
@@ -107,12 +107,17 @@ output_kpi = {
 }
 output_kpi_df = pd.DataFrame(output_kpi)
 # print(output_kpi_df.to_string())
-output_kpi_df.to_csv(cleaned_data_dir / "def_kpi_df.csv", index=False)
+# output_kpi_df.to_csv(cleaned_data_dir / "def_kpi_df.csv", index=False)
 
 
 
 
 # Games
+#TODO: add columns: 
+# - us_score
+# - opp_score
+# - us_ht_score
+# - opp_ht_score 
 dates = []
 possible_stakes = ['quarti','semi','final', 'pool']
 opponents = []
@@ -149,9 +154,9 @@ for (i, file) in enumerate(input_files):
 # Stats to add: ['pts_played_o', 'pts_played_d', 'pts_played_tot', 'tot_blocks', 'tot_tovs', 'ht_blocks', 'ht_tovs', 'tot_break_us', 'tot_break_opp', 'ht_break_us', 'ht_break_opp', 'final_score_us', 'final_score_opp', 'ht_score_us', 'ht_score_opp']
 # DataFrame select column values
 def_game_stats = input_stats_df[input_stats_df.recurrency == "gm"]
-print(def_game_stats)
+# print(def_game_stats)
 # # DataFrame select column
-print(def_game_stats[["names","owners"]])
+# print(def_game_stats[["names","owners"]])
 # # DataFrame column toList
 # print(def_game_stats["names"].tolist())
 # # DataFrame row toList
@@ -185,7 +190,7 @@ gm_team = calc_gm_team()
 
 # print(opponents)
 # print(game_files)
-games_df = pd.DataFrame({'opponent': opponents, 'stakes':stakes, 'date': dates})
+games_df = pd.DataFrame({'opponent': opponents, 'stakes': stakes, 'date': dates})
 # games = games[['opponent', 'stakes','date']] # 27,28,29/09/24
 # print(opponents)
 # print(stakes)
@@ -205,8 +210,8 @@ games_df = pd.DataFrame({'opponent': opponents, 'stakes':stakes, 'date': dates})
 # 2pt left to the ht_point
 # AND
 # 2pt or less difference (difficult to score more than 2 consecutive breaks)
-def calc_ps():
-    pass
+def_pt_stats = input_stats_df[input_stats_df.recurrency == "pt"]
+# print(def_pt_stats)
 
 def calc_pt_player():
     pass
@@ -215,11 +220,200 @@ def calc_pt_team():
     pass
 
 
-
+#possessions.csv
 pt_player = calc_pt_player()
 pt_team = calc_pt_team()
 
-ps = calc_ps()
+
+
+
+
+
+
+
+
+
+
+
+def_ps_stats = input_stats_df[input_stats_df.recurrency == "ps"]
+# print(def_ps_stats)
+def calc_ps_player():
+    pass
+def calc_ps_team():
+    pass
+
+ps = calc_ps_player()
+ps = calc_ps_team()
+
+
+
+
+
+
+
+
+##################
+## Big Cleaning ##
+##################
+def extract_table3(df, tot_row):
+    # Find the starting row of table 3 — first numeric value after 'Tot' row
+    numeric_start = df.iloc[tot_row + 1:, 0].apply(lambda x: str(x).strip().isdigit())
+    if not numeric_start.any():
+        raise ValueError("Could not find the numeric start for table 3.")
+    start_index = numeric_start[numeric_start].index[0]
+    # Header row is the row right before numeric start
+    header_row = df.loc[start_index - 1].dropna().tolist()
+    # print(header_row)
+    header_row = ["jersey_number","name"]+header_row
+    # print(header_row)
+    # Find the last column for table 3 — last occurrence of '(sec)' in the header row
+    last_col_index = next((i for i, col in enumerate(header_row) if 'Blocks linea D' in str(col)), len(header_row) - 1) - 1
+    # Find the last row — last numeric value in the first column
+    numeric_values = df.loc[start_index:, 0].apply(lambda x: str(x).strip().isdigit())
+    if not numeric_values.any():
+        raise ValueError("Could not find the last numeric row for table 3.")
+    end_index = numeric_values[numeric_values].index[-1]
+    # Extract table 3
+    table3 = df.loc[start_index:end_index, :last_col_index].reset_index(drop=True)
+    # print(table3)
+    # print(header_row[:last_col_index + 1])
+    # print(table3.shape)
+    # print(len(header_row[:last_col_index + 1]))
+    table3.columns = header_row[:last_col_index + 1]
+    table3 = table3[table3['name'].notna()]
+    return table3
+
+
+def extract_tables(filepath, last_point_id):
+    df = pd.read_csv(filepath, header=None, skip_blank_lines=False)
+
+    # Table 1: Starts from "In campo" row, ends when "In campo" column has empty cells
+    in_campo_row = df[df.apply(lambda x: x.str.contains('In campo', na=False).any(), axis=1)].index[0]
+    # in_campo_header = df.iloc[in_campo_row].dropna().tolist()
+    in_campo_header = df.iloc[in_campo_row].tolist()
+    # in_campo_header.remove("TODO")
+    in_campo_header[0] = "special_line"
+
+    table1_start = in_campo_row + 1
+    table1_end = table1_start
+    while table1_end < len(df) and pd.notna(df.iloc[table1_end, 3]):  # Column with "In campo" values
+        table1_end += 1
+
+    table1 = df.iloc[table1_start:table1_end].reset_index(drop=True)
+
+    table1.columns = in_campo_header
+    table1['In Campo'] = table1.iloc[:, 3:10].values.tolist()  # Group first 7 columns
+    table1 = table1.drop(columns=table1.columns[2:10])  # Drop those 7 individual columns
+    table1['point_id'] = range(last_point_id, last_point_id + len(table1))
+    point_id = last_point_id + len(table1)
+    print(table1)
+    
+    
+    # print(len(in_campo_header))
+    # # print(table1.num_columns)
+    # print(len(in_campo_header))
+
+    # print(table1)
+    # print(in_campo_header)
+
+
+    # Table 2: Row starting with "Tot"
+    tot_row = df[df.iloc[:, 0].astype(str).str.contains('Tot', na=False)].index[0]
+    table2 = pd.DataFrame([df.iloc[tot_row, 10:14].tolist()], columns=["tot_blocks", "tot_tovs", "tot_breaks_us", "tot_breaks_opp"])
+    # print(table2)
+
+    # # Table 3: Starts with first numeric value after Table 2
+    # numeric_start = df[df.iloc[tot_row + 1:, 0].apply(lambda x: str(x).isdigit())].index[0]
+    # header_row = numeric_start - 1
+    # table3_end = numeric_start
+
+    # while table3_end < len(df) and pd.to_numeric(df.iloc[table3_end, 0], errors='coerce').notna():
+    #     table3_end += 1
+
+    # table3 = df.iloc[numeric_start:table3_end].reset_index(drop=True)
+    # print(table3)
+    # table3.columns = df.iloc[header_row].dropna().tolist()
+
+
+
+    # # Table 3: Starts from next numeric row, ends at last numeric row
+    # numeric_start = df[df.iloc[tot_row + 1:, 0].apply(lambda x: str(x).strip().isdigit())].index[0]
+    # header_row = numeric_start - 1
+    # end_row_3 = df.loc[numeric_start:, 0].last_valid_index()
+
+    # # End of table 3 based on last "(sec)" column
+    # last_col_3 = df.loc[header_row].last_valid_index()
+    # table_3 = df.loc[numeric_start:end_row_3, :last_col_3].reset_index(drop=True)
+    # table_3.columns = df.loc[header_row, :last_col_3].tolist()
+    table3 = extract_table3(df, tot_row)
+    # print(table3)
+
+    # Table 4: Last row after "TOT", sharing headers with Table 3
+    tot_final_row = df[df.iloc[:, 1].astype(str).str.contains('TOT', na=False)].index[0]
+    table4_columns = table3.columns[2:]
+    print(len(df.iloc[tot_final_row, 2:].tolist()[:(len(table4_columns))]))
+    print(df.iloc[tot_final_row, 2:].tolist()[:(len(table4_columns))])
+    print(tot_final_row)
+    print(len(table4_columns))
+    # print(df.iloc[tot_final_row, 2:].tolist())
+    table4 = pd.DataFrame([df.iloc[tot_final_row, 2:].tolist()[:(len(table4_columns))]], columns=table4_columns)
+    print(table4)
+
+    return table1, table2, table3, table4, point_id 
+
+
+
+# Usage
+tables = []
+last_point_id = 0
+for (i, file) in enumerate(game_files):
+    table1, table2, table3, table4, last_point_id = extract_tables(file, last_point_id)
+    table1['game_id'] = i
+    table2['game_id'] = i
+    table3['game_id'] = i
+    table4['game_id'] = i
+    tables.append(table1)
+    tables.append(table2)
+    tables.append(table3)
+    tables.append(table4)
+
+    # Display results
+    print("Table 1:")
+    print(table1.head())
+    print("\nTable 2:")
+    print(table2)
+    print("\nTable 3:")
+    print(table3.head())
+    print("\nTable 4:")
+    print(table4)
+    # tables = extract_tables("Stats La FOTTA EUCF 2024 - Tot.csv")
+
+points_team = pd.DataFrame(columns=tables[0].columns)
+games_team = pd.DataFrame(columns=tables[1].columns+tables[1].columns)
+points_player = pd.DataFrame(columns=tables[2].columns)
+for i in range(0,4):
+    points_team = pd.concat([points_team,tables[4*i]], ignore_index=True)
+
+    # games_team = pd.concat([games_team,tables[4*i+1]], ignore_index=True)
+    # games_team = pd.concat([games_team,tables[4*i+3]], ignore_index=True)
+
+    # points_player = pd.concat([points_player,tables[4*i+2]], ignore_index=True)
+    tables[4*i+1]
+    tables[4*i+2]
+    tables[4*i+3]
+
+print(points_team)
+
+# input_stats = {
+#     'short_names': stat_short_names+t_stat_short_names,
+#     'names': stat_names+t_stat_names,
+#     '!': stat_important+t_stat_important,
+#     'recurrency': stat_recurrency+t_stat_recurrency,
+#     'owners': stat_owners+t_stat_owners,
+#     'dtype': stat_dtype+t_stat_dtype
+# }
+# input_stats_df = pd.DataFrame(input_stats)
+
 
 
 
