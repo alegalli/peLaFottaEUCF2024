@@ -1,29 +1,32 @@
-import glob
 import os
 import pandas as pd
+from pathlib import Path
 
 # Define input file pattern (adjust path if needed)
-input_files = glob.glob("C:\\Users\\Alessandro\\Documents\\ale\\valuationLaFotta2024\\Stats La FOTTA EUCF 2024\\Stats La FOTTA EUCF 2024 - *.csv")
-tot = "C:\\Users\\Alessandro\\Documents\\ale\\valuationLaFotta2024\\Stats La FOTTA EUCF 2024\\Stats La FOTTA EUCF 2024 - Tot.csv"
+data_dir = Path('data')
+cleaned_data_dir = Path('cleaned_data')
+input_files = list(data_dir.glob("Stats La FOTTA EUCF 2024 - *.csv"))
+tot = "data/Stats La FOTTA EUCF 2024 - Tot.csv"
 
 # Initialize data structures
-players = []
-stats =[]
-games = []
-points = []
-possessions = []
-events = []
+# players = []
+# stats =[]
+# games = []
+# points = []
+# possessions = []
+# events = []
 
 # Players
 players = pd.read_csv(tot, usecols=[0,1])
 players.rename(columns={'Unnamed: 0': 'jersey_number', 'Unnamed: 1': 'name'}, inplace=True)
 players['team'] = 'BFD La Fotta'
-players = players.dropna()
+players.dropna(inplace=True)
 players['jersey_number'] = players['jersey_number'].astype('int')
 players = players[['name', 'jersey_number','team']]
 # print(players.to_string())
 
 players_df = pd.DataFrame(players)
+players_df.to_csv(cleaned_data_dir / "players.csv", index=False)
 # players_df.to_csv("C:\\Users\\Alessandro\\Documents\\ale\\valuationLaFotta2024\\cleaned_data\\players.csv", index=False)
 
 
@@ -34,13 +37,13 @@ opponents = []
 stakes = []
 extra = 0
 for (i, file) in enumerate(input_files):
-    opponent = os.path.basename(file).split(" - ")[-1].split(".")[0]
-    if opponent == "Legenda Storia" or opponent == "Tot":
+    opponent = file.stem.split(" - ")[-1] #os.path.basename(file).split(" - ")[-1].split(".")[0]
+    if opponent in ["Legenda Storia", "Tot"]:
         extra += 1
         continue
-    for stake in stakes:
+    for stake in possible_stakes:
         # NOTE: This works because stakes are all different names and different from the team names, otherwise manually
-        if len(opponent.split(stake)) > 0:
+        if stake in opponent:
             opponents.append(opponent.split(stake)[0])
             stakes.append(stake)
             if stake in ['semi','final']:
@@ -53,15 +56,17 @@ for (i, file) in enumerate(input_files):
         dates.append('27/09/24')
         stakes.append('pool')
     if opponent == 'BADSKID':
-        dates.append('28/09/24')
+        dates[-1] = '28/09/24' #dates.append('28/09/24')
 
-games['opponent'] = opponents
-games['stakes'] = stakes
-games['date'] = dates
+
+games_df = pd.DataFrame({'opponent': opponents, 'stakes':stakes, 'date': dates})
 # games = games[['opponent', 'stakes','date']] # 27,28,29/09/24
-games_df = pd.DataFrame(games)
-print(games_df.to_string())
+print(opponents)
+print(stakes)
+print(dates)
 
+print(games_df.to_string())
+games_df.to_csv(cleaned_data_dir / "games.csv", index=False)
 
 # print(os.path.basename(file).split(" - ")[-1].split(".")[0])
 
