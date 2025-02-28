@@ -460,16 +460,16 @@ points_team.insert(11, 'score_opp_pt', np.nan)
 # print(ps_team_stats)
 # print(len(ps_team_stats))
 # print(points_team.shape)
-print(pt_team_stats.to_list()+ps_team_stats.to_list()[2:]+points_team.columns.to_list()[18:])
-print(len(pt_team_stats.to_list()+ps_team_stats.to_list()[2:]+points_team.columns.to_list()[18:]))
+# print(pt_team_stats.to_list()+ps_team_stats.to_list()[2:]+points_team.columns.to_list()[18:])
+# print(len(pt_team_stats.to_list()+ps_team_stats.to_list()[2:]+points_team.columns.to_list()[18:]))
 # team_ps
 # "scored_us":bool,"scored_ps":bool,"score_us_ps":int,"score_opp_ps":int,
 
 points_team.columns = pt_team_stats.to_list()+ps_team_stats.to_list()[2:]+points_team.columns.to_list()[18:]
-print(points_team.columns)
-print(points_team)
+# print(points_team.columns)
+# print(points_team)
 
-print(points_team[points_team['game_id'] == 4])
+# print(points_team[points_team['game_id'] == 4])
 # # Calc scored_us
 # scored_us = (not points_team['scored_us'].isna())
 # points_team['scored_us'] = scored_us
@@ -526,14 +526,13 @@ for i in range(len(points_team)):
     else:
         points_team.loc[i, 'break'] = False
 # print(points_team[points_team['game_id'] == 1][['game_id', 'scored_us', 'score_us_pt', 'score_opp_pt', 'scorer', 'game_phase']])
-print(points_team)
+# print(points_team)
 
 
 ##########
 # Points-Player
 ##########
 # Note: to save db space we save only possession where a specific player has played. So if for a certain possession_id and player_id there is no record, it means that that player didn't played that possession => pt_played_tot
-print(points_team)
 points_player = pd.DataFrame(columns=['point_id', 'player_id', 'pss_played_o', 'pss_played_d', 'pss_played_tot', 'pt_played_o', 'pt_played_d', 'pt_played_tot'])
 
 # Loop through points_team
@@ -573,12 +572,13 @@ for point_idx, point in points_team.iterrows():
                 'pt_played_tot': pt_played_tot
             }])], ignore_index=True)
 
-# print("points_player")
+print("points_player")
 # print(points_player[points_player['player_id'] == 0])
 # print(points_player[points_player['player_id'] == 15])
 # print(points_player[points_player['player_id'] == 16])
 
-
+points_player.to_csv(cleaned_data_dir / "points_player.csv", index=False)
+print(input_stats_df)
 
 
 # Calculation Composed Fields: clutch_point, scored_us
@@ -594,34 +594,41 @@ for point_idx, point in points_team.iterrows():
 # team_gm
 # "tot_blocks","tot_tovs","ht_blocks","ht_tovs","tot_break_us","tot_break_opp","ht_break_us","ht_break_opp","final_score_us","final_score_opp","ht_score_us","ht_score_opp"
 #TODO: NEXT CLUTCH
-# # # # # # # clutch_game_diff = 3  # 2 + 1
-# # # # # # # clutch_ht_val = 3     # 2 + 1
-# # # # # # # clutch_game_val = 4   # 3 + 1
-# # # # # # # for game_id in games_team['game_id'].unique():
-# # # # # # #     game_points = points_team[points_team['game_id'] == game_id]
+clutch_game_diff = 3  # 2 + 1
+clutch_ht_val = 3     # 2 + 1
+clutch_game_val = 4   # 3 + 1
+for game_id in games_team['game_id'].unique():
+    # gt = games_team[games_team['game_id'] == game_id]
+    game_points = points_team[points_team['game_id'] == game_id]
     
-# # # # # # #     # Get the highest scores in the game
-# # # # # # #     max_ht_score = max(game_points['score'].max(), 0)  # Max half-time score
-# # # # # # #     max_final_score = max(game_points['score'].max(), 0)  # Max final score
+    # Get the highest scores in the game
+    max_ht_score = max(games_team.loc[game_id,'ht_score_us'], games_team.loc[game_id,'ht_score_opp'])  # Max half-time score
+    min_ht_score = min(games_team.loc[game_id,'ht_score_us'], games_team.loc[game_id,'ht_score_opp'])  # Max half-time score
+    max_final_score = max(games_team.loc[game_id,'final_score_us'], games_team.loc[game_id,'final_score_opp'])  # Max final score
 
-# # # # # # #     for idx, point in game_points.iterrows():
-# # # # # # #         score_us = point['score']
-# # # # # # #         score_diff = abs(score_us - game_points['score'].shift().fillna(10))
+    for idx, point in game_points.iterrows():
+        max_score = max(point['score_us_pt'], point['score_opp_pt'])
+        min_score = min(point['score_us_pt'], point['score_opp_pt'])
+        score_diff = abs(point['score_us_pt'] - point['score_opp_pt'])
 
-# # # # # # #         # Check if the point qualifies as "clutch"
-# # # # # # #         is_clutch = (
-# # # # # # #             (score_diff <= clutch_game_diff) and
-# # # # # # #             (
-# # # # # # #                 (max_ht_score - score_us < clutch_ht_val) or
-# # # # # # #                 (max_final_score - score_us < clutch_game_val)
-# # # # # # #             )
-# # # # # # #         )
+        # Check if the point qualifies as "clutch"
+        is_clutch = (
+            (score_diff <= clutch_game_diff) and
+            (
+                ((max_ht_score - max_score < clutch_ht_val) and (max_score <= max_ht_score) and (min_score <= min_ht_score)) or
+                (max_final_score - max_score < clutch_game_val)
+            )
+        )
+        points_team.loc[idx, 'clutch_point'] = is_clutch
 
-# # # # # # #         # Update the 'clutch_point' column
-# # # # # # #         points_team.at[idx, 'clutch_point'] = is_clutch
+        # Update the 'clutch_point' column
+        # points_team.at[idx, 'clutch_point'] = is_clutch
 
-# # # # # # # print(games_team)
 
+# print(points_team)
+# print(points_team[points_team['point_id'] > 120])
+
+points_team.to_csv(cleaned_data_dir / "points_team.csv", index=False)
 
 
 
