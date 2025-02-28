@@ -59,13 +59,13 @@ stat_important = ['', '!', '!', '!', '!', '!', '', '', '', '', '!', '', '', '!',
 # print(len(stat_important))
 # print(len(stat_important))
 #team stats: 19 elems, Lineup.dtype = [], Break.dtype = bool
-t_stat_short_names = ["","","","In Campo","Blocks","Tovs","Break","","A/D","","","","","","Schema A","Schema D","Storia neg","Storia pos","Assist","Meta","","","","","","","","","","","",""]
-t_stat_names = ["min_pt","sec_pt","special_line","lineup","blocks","tovs","break","clutch_point","start_offensive_pt","offensive_ps","scored_us","scored_ps","score_us_ps","score_opp_ps","set_play_o","d_tactic","negative_hystory","positive_hystory","assistmen","scorer","tot_blocks","tot_tovs","ht_blocks","ht_tovs","tot_break_us","tot_break_opp","ht_break_us","ht_break_opp","final_score_us","final_score_opp","ht_score_us","ht_score_opp"]
-# t_stat_names = ["min_pt","sec_pt","special_line","lineup","blocks","tovs","break","clutch_point","start_offensive_pt","offensive_ps","scored_us","scored_ps","score_us_ps","score_opp_ps","set_play_o","d_tactic","negative_hystory","positive_hystory","assistmen","scorer","tot_blocks","tot_tovs","ht_blocks","ht_tovs","tot_break_us","tot_break_opp","ht_break_us","ht_break_opp","final_score_us","final_score_opp","ht_score_us","ht_score_opp"]
-t_stat_recurrency = ["pt","pt","pt","pt","pt","pt","pt","pt","pt","ps","pt","ps","ps","ps","pt","pt","pt","pt","ps","ps","gm","gm","gm","gm","gm","gm","gm","gm","gm","gm","gm","gm"] # lineup is per point, we still don't manage perfectly the injury subs
-t_stat_dtype = ["int","int","bool","[7]","int","int","bool","bool","bool","bool","bool","bool","int","int","string","string","string","string","int","int","int","int","int","int","int","int","int","int","int","int","int","int"]
+t_stat_short_names = ["","","","In Campo","Blocks","Tovs","Break","","A/D","","","","","","Schema A","Schema D","Storia neg","Storia pos","Assist","Meta","","","","","","","","","","","","","game_phase"]
+t_stat_names = ["min_pt","sec_pt","special_line","lineup","blocks","tovs","break","clutch_point","start_offensive_pt","offensive_ps","scored_us","scored_ps","score_us_pt","score_opp_pt","set_play_o","d_tactic","negative_hystory","positive_hystory","assistmen","scorer","tot_blocks","tot_tovs","ht_blocks","ht_tovs","tot_break_us","tot_break_opp","ht_break_us","ht_break_opp","final_score_us","final_score_opp","ht_score_us","ht_score_opp","game_phase"]
+# t_stat_names = ["min_pt","sec_pt","special_line","lineup","blocks","tovs","break","clutch_point","start_offensive_pt","offensive_ps","scored_us","scored_ps","score_us_pt","score_opp_pt","set_play_o","d_tactic","negative_hystory","positive_hystory","assistmen","scorer","tot_blocks","tot_tovs","ht_blocks","ht_tovs","tot_break_us","tot_break_opp","ht_break_us","ht_break_opp","final_score_us","final_score_opp","ht_score_us","ht_score_opp"]
+t_stat_recurrency = ["pt","pt","pt","pt","pt","pt","pt","pt","pt","ps","pt","ps","pt","pt","pt","pt","pt","pt","ps","ps","gm","gm","gm","gm","gm","gm","gm","gm","gm","gm","gm","gm","gm"] # lineup is per point, we still don't manage perfectly the injury subs
+t_stat_dtype = ["int","int","bool","[7]","int","int","bool","bool","bool","bool","bool","bool","int","int","string","string","string","string","int","int","int","int","int","int","int","int","int","int","int","int","int","int","string"]
 t_stat_owners = ["team"]*len(t_stat_names)
-t_stat_important = ['','','', '!', '', '', '!', '!', '!', '!', '!', '!', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''] # [""]*len(t_stat_names)
+t_stat_important = ['', '', '', '!', '', '', '!', '!', '!', '!', '!', '!', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '!'] # [""]*len(t_stat_names)
 
 # print(len(stat_short_names))
 # print(len(stat_names))
@@ -381,11 +381,13 @@ for (i, file) in enumerate(game_files):
 # print(tables4)
 
 points_team = pd.DataFrame(columns=tables1[0].columns)
-
+# print(points_team)
 print("games_team")
 # TODO: I know that I should save the data on lists and then only later work with dfs, to redo
 games_team = pd.concat([pd.concat(tables2, axis=0, ignore_index=True),pd.concat(tables4, axis=0, ignore_index=True)],axis=1)
 points_team = pd.concat(tables1, axis=0, ignore_index=True)
+print(points_team)
+
 # points_player = pd.concat(tables3, axis=0, ignore_index=True)
 games_player = pd.concat(tables3, axis=0, ignore_index=True)
 
@@ -401,9 +403,6 @@ games_player = pd.concat(tables3, axis=0, ignore_index=True)
 # print(points_player)
 # print(games_team.columns[games_team.columns.duplicated()])
 
-#########
-# Rename columns
-#########
 # print(def_game_stats)
 # print(def_pt_stats)
 # print()
@@ -411,13 +410,15 @@ pt_player_stats = input_stats_df[input_stats_df.recurrency == "pt"][input_stats_
 ps_player_stats = input_stats_df[input_stats_df.recurrency == "ps"][input_stats_df.owners == "player"].names.reindex()
 gm_player_stats = input_stats_df[input_stats_df.recurrency == "gm"][input_stats_df.owners == "player"].names.reindex()
 pt_team_stats = input_stats_df[input_stats_df.recurrency == "pt"][input_stats_df.owners == "team"].names.reindex()
+ps_team_stats = input_stats_df[input_stats_df.recurrency == "ps"][input_stats_df.owners == "team"].names.reindex()
+gm_team_stats = input_stats_df[input_stats_df.recurrency == "gm"][input_stats_df.owners == "team"].names.reindex()
 
-print(input_stats_df)
+# print(input_stats_df)
 
 
-#########
-# Points-Player
-#########
+#################
+# Points-Player #
+#################
 # Empty Points-Player columns TODO: recalc table from team_pt stats
 # NOTE: do not initialize with NaN values, TODO: add possession_id
 # points_player = points_player[list(points_player.columns[0:2])]
@@ -428,23 +429,90 @@ points_player_columns = ( #
     list(input_stats_df[input_stats_df.owners == "player"].names.to_list()) + #all player stats
     ["point_id","game_id"]
 )
-print(len(points_player_columns))
-print(points_player_columns)
+# print(len(points_player_columns))
+# print(points_player_columns)
 # TODO: recalc from Points-Team
 
 
-#########
-# Points-Team
-#########
+###############
+# Points-Team #
+###############
 points_team.insert(0, 'min_pt', np.nan)
 points_team.insert(1, 'sec_pt', np.nan)
 in_campo = points_team.pop('In Campo')
 points_team.insert(3, 'In Campo', in_campo)
-points_team.insert(5, 'clutch_pt', np.nan) #'') # TODO: calc clutch_pt & scored_us
-points_team.insert(7, 'scored_us', np.nan)
-print(pt_team_stats)
+points_team.insert(7, 'clutch_point', np.nan) #'') # TODO: calc clutch_point & scored_us
+points_team.insert(9, 'scored_us', np.nan)
+# print(points_team)
+# print(points_team.columns)
+# print(len(points_team.columns))
+points_team.insert(10, 'score_us_pt', np.nan) #from ps_team_stats
+points_team.insert(11, 'score_opp_pt', np.nan)
+# print(points_team)
+# print(points_team.columns)
+# print(len(points_team.columns))
+# # points_team.insert(18, 'assistmen', np.nan)
+# points_team.insert(19, 'scorer', np.nan)
+# print(points_team.columns)
+# print(len(points_team.columns))
+# print(pt_team_stats)
+# print(len(pt_team_stats))
+# print(ps_team_stats)
+# print(len(ps_team_stats))
+# print(points_team.shape)
+print(pt_team_stats.to_list()+ps_team_stats.to_list()[2:]+points_team.columns.to_list()[18:])
+print(len(pt_team_stats.to_list()+ps_team_stats.to_list()[2:]+points_team.columns.to_list()[18:]))
+# team_ps
+# "scored_us":bool,"scored_ps":bool,"score_us_ps":int,"score_opp_ps":int,
 
-points_team.columns = pt_team_stats.to_list()+["assist","score","point_id","game_id"]
+points_team.columns = pt_team_stats.to_list()+ps_team_stats.to_list()[2:]+points_team.columns.to_list()[18:]
+print(points_team.columns)
+print(points_team)
+
+print(points_team[points_team['game_id'] == 4])
+# # Calc scored_us
+# scored_us = (not points_team['scored_us'].isna())
+# points_team['scored_us'] = scored_us
+
+# # Calc score_us_pt
+# score_us_pt = (points_team['scored_us'])
+# points_team['scored_us'] = scored_us
+
+# # Calc score_opp_pt
+# scored_us = (not points_team['scored_us'].isna())
+# points_team['scored_us'] = scored_us
+# Calc scored_us: True if 'scored_us' is not NaN
+points_team['scored_us'] = points_team['scorer'].notna()
+
+# Calc score_us_pt & score_opp_pt
+points_team['score_us_pt'] = 0
+points_team['score_opp_pt'] = 0
+
+for i in range(len(points_team)):
+    if i == 0 or points_team.loc[i, 'game_id'] != points_team.loc[i - 1, 'game_id']:
+        # Start of a new game, reset scores
+        prev_us_score = 0
+        prev_opp_score = 0
+    else:
+        prev_us_score = points_team.loc[i - 1, 'score_us_pt']
+        prev_opp_score = points_team.loc[i - 1, 'score_opp_pt']
+    if points_team.loc[i, 'scored_us']:
+        points_team.loc[i, 'score_us_pt'] = prev_us_score + 1
+        points_team.loc[i, 'score_opp_pt'] = prev_opp_score
+    else:
+        points_team.loc[i, 'score_us_pt'] = prev_us_score
+        points_team.loc[i, 'score_opp_pt'] = prev_opp_score + 1
+
+print(points_team[points_team['game_id'] == 1][['game_id', 'scored_us', 'score_us_pt', 'score_opp_pt', 'scorer', 'game_phase']])
+
+
+# print(points_team)
+
+
+
+
+
+
 
 # Calculation Coposed Fields: clutch_point, scored_us
 # Clutch Point Definition:
@@ -454,17 +522,76 @@ points_team.columns = pt_team_stats.to_list()+["assist","score","point_id","game
 # 2pt or less difference (difficult to score more than 2 consecutive breaks)
 # Index(['min_pt', 'sec_pt', 'special_line', 'lineup', 'blocks', 'tovs', 'break', 'clutch_point', 'start_offensive_pt', 'scored_us', 'set_play_o', 'd_tactic', 'negative_hystory', 'positive_hystory', 'assist', 'score', 'point_id', 'game_id'],
 # NEED: games_team.final_score_us, games_team.final_score_opp, game_team.ht_score_us, game_team.ht_score_opp
-# "scored_us","scored_ps","score_us_ps","score_opp_ps",
+# team_ps
+# "scored_us":bool,"scored_ps":bool,"score_us_ps":int,"score_opp_ps":int,
+# team_gm
 # "tot_blocks","tot_tovs","ht_blocks","ht_tovs","tot_break_us","tot_break_opp","ht_break_us","ht_break_opp","final_score_us","final_score_opp","ht_score_us","ht_score_opp"
-print(games_team)
-print(games_team)
+
+# Pseudo-code
+# clutch_game_diff = 3  # 2 + 1
+# clutch_ht_val = 3     # 2 + 1
+# clutch_game_val = 4   # 3 + 1
+# for gm in games_team:
+#     max_ht_score = max(gm_ht_score_us, gm.ht_score_opp) 
+#     max_final_score = max(gm.final_score_us, gm.final_score_opp)
+#     for ps in points_team[points_team.game_id = gm].list():
+#         if(abs(team_ps.score_us_ps - team_ps.score_opp_ps) < clutch_game_diff):
+#             if((max_ht_score - team_ps.score_us_ps < clutch_ht_val) or (max_ht_score - team_ps.score_opp_ps < clutch_ht_val)):
+#                 team_ps[gm][ps] = True
+#                 pass
+#             elif((max_final_score - team_ps.score_us_ps < clutch_game_val) or (max_final_score - team_ps.score_opp_ps < clutch_game_val)):
+#                 team_ps[gm][ps] = True
+#                 pass
+#             else:
+#                 team_ps[gm][ps] = False
+# print(points_team)
+
+
+
+
+#TODO: NEXT CLUTCH
+# # # # # # # # clutch_game_diff = 3  # 2 + 1
+# # # # # # # # clutch_ht_val = 3     # 2 + 1
+# # # # # # # # clutch_game_val = 4   # 3 + 1
+# # # # # # # # for game_id in games_team['game_id'].unique():
+# # # # # # # #     game_points = points_team[points_team['game_id'] == game_id]
+    
+# # # # # # # #     # Get the highest scores in the game
+# # # # # # # #     max_ht_score = max(game_points['score'].max(), 0)  # Max half-time score
+# # # # # # # #     max_final_score = max(game_points['score'].max(), 0)  # Max final score
+
+# # # # # # # #     for idx, point in game_points.iterrows():
+# # # # # # # #         score_us = point['score']
+# # # # # # # #         score_diff = abs(score_us - game_points['score'].shift().fillna(10))
+
+# # # # # # # #         # Check if the point qualifies as "clutch"
+# # # # # # # #         is_clutch = (
+# # # # # # # #             (score_diff <= clutch_game_diff) and
+# # # # # # # #             (
+# # # # # # # #                 (max_ht_score - score_us < clutch_ht_val) or
+# # # # # # # #                 (max_final_score - score_us < clutch_game_val)
+# # # # # # # #             )
+# # # # # # # #         )
+
+# # # # # # # #         # Update the 'clutch_point' column
+# # # # # # # #         points_team.at[idx, 'clutch_point'] = is_clutch
+
+
+
+
+
+
+
+
+# print(games_team)
+# print(games_team)
 
 
 
 
 # print(points_team.columns)
 # print("points_team")
-print(points_team.columns)
+# print(points_team.columns)
 # print(games_player)
 # print(games_team)
 
