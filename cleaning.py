@@ -104,8 +104,8 @@ kpi_recurrency = ["","","","","","","","","","","","","","","",""] # Not on the 
 kpi_owners = ["player","player","player","player","player","player","player","player","team","team","team","team","team","team","team","team"] # ["player"]*len(kpi_names)
 # kpi_recurrency = ["","","","","","","","","","","","","","","",""]
 kpi_dtype = ["float"]*len(kpi_names) # ["float","float","float","float","float","","","","",""] # ["float"]*len(kpi_names) 
-kpi_description = ["#pss_played_tot/#pts_played_tot","#pss_played_o/#pts_played_o","#pss_played_d/#pts_played_d","plus-minus=TODO: ...","pt where player in lineup #scored_us / #pss_played_o","pt where player in lineup, ps where tov_rec_ps=(start_offensive_pt && !offensive_ps): #(tov_rec_ps && !scored_ps) / #tov_rec_ps","pt where player in lineup, ps where break_chance_ps=(!start_offensive_ps && offensive_ps): #break / #break_chance_ps","scoring_impact+tov_recovery_impact+break_efficiency","","","","","","","",""]
-kpi_stats_needed = [["pts_played_tot","pss_played_tot"],["pts_played_o","pss_played_o"],["pts_played_d","pss_played_d"],[],["lineup","scored_us","pss_played_o"],["lineup","start_offensive_pt","offensive_ps","scored_ps"],["lineup","start_offensive_ps","offensive_ps"],[],[],[],[],[],[],[],[],[]]
+kpi_description = ["#pss_played_tot/#pts_played_tot","#pss_played_o/#pts_played_o","#pss_played_d/#pts_played_d","plus-minus=TODO: ...","pt where player in lineup #scored_us / #pss_played_o","pt where player in lineup, ps where tov_rec_ps=(start_offensive_pt && !offensive_ps): #(tov_rec_ps && !scored_ps) / #tov_rec_ps","pt where player in lineup, ps where break_chance_ps=(!start_offensive_ps && offensive_ps): #break / #break_chance_ps","scoring_impact+tov_recovery_impact+break_efficiency, to weight considering pts_played_o, pts_played_d","","","","","","","",""]
+kpi_stats_needed = [["pts_played_tot","pss_played_tot"],["pts_played_o","pss_played_o"],["pts_played_d","pss_played_d"],[],["lineup","scored_us","pss_played_o"],["lineup","start_offensive_pt","offensive_ps","scored_ps"],["lineup","start_offensive_ps","offensive_ps","break"],[],[],[],[],[],[],[],[],[]]
 
 # print(len(kpi_names))
 # print(len(kpi_owners))
@@ -502,11 +502,63 @@ for i in range(len(points_team)):
     else:
         points_team.loc[i, 'score_us_pt'] = prev_us_score
         points_team.loc[i, 'score_opp_pt'] = prev_opp_score + 1
+    # Calc ht_score_us
+    # Calc ht_score_opp
+    # Calc final_score_us
+    # Calc final_score_opp
+    if points_team.loc[i, 'game_phase'] == 'ht': #no need for int() find another way to cast to int
+        games_team.loc[points_team.loc[i, 'game_id'], 'ht_score_us'] = int(points_team.loc[i, 'score_us_pt'])
+        games_team.loc[points_team.loc[i, 'game_id'], 'ht_score_opp'] = int(points_team.loc[i, 'score_opp_pt'])
+    elif points_team.loc[i, 'game_phase'] == 'end':
+        games_team.loc[points_team.loc[i, 'game_id'], 'final_score_us'] = int(points_team.loc[i, 'score_us_pt'])
+        games_team.loc[points_team.loc[i, 'game_id'], 'final_score_opp'] = int(points_team.loc[i, 'score_opp_pt'])
+    # Calc BOOLS
+    # Calc start_offensive_pt
+    if points_team.loc[i, 'start_offensive_pt'] == 'A' or points_team.loc[i, 'start_offensive_pt'] == 'a':
+        points_team.loc[i, 'start_offensive_pt'] = True
+    elif points_team.loc[i, 'start_offensive_pt'] == 'D' or points_team.loc[i, 'start_offensive_pt'] == 'd':
+        points_team.loc[i, 'start_offensive_pt'] = False
+    else:
+        points_team.loc[i, 'start_offensive_pt'] = np.NaN
+    # Calc break
+    if points_team.loc[i, 'break'] == 'BREAK':
+        points_team.loc[i, 'break'] = True
+    else:
+        points_team.loc[i, 'break'] = False
+# print(points_team[points_team['game_id'] == 1][['game_id', 'scored_us', 'score_us_pt', 'score_opp_pt', 'scorer', 'game_phase']])
+print(points_team)
 
-print(points_team[points_team['game_id'] == 1][['game_id', 'scored_us', 'score_us_pt', 'score_opp_pt', 'scorer', 'game_phase']])
+
+##########
+# Points-Player
+##########
+# Calc pt_player_o, pt_player_d, pt_player_tot
+# Calc pss_player_o, pss_player_d, pss_player_tot
+print(points_player_columns)
+for i in range(len(points_team)):
+    for j in range(len(players_df)):
+        # player_id = players_df[]
+        # if in points_team[i, "lineup"]
+        # points_player.loc[i, 'pss_player_o'] = points_team.loc[i, 'blocks'] +  points_team.loc[i, 'start_offensive_pt'] ? 1 : 0
+        # points_player.loc[i, 'pss_player_d'] = points_team.loc[i, 'tovs'] +  points_team.loc[i, 'start_offensive_pt'] ? 0 : 1
+        # points_player.loc[i, 'pss_player_tot'] = points_team.loc[i, 'tovs'] + points_team.loc[i, 'blocks'] +  1
+        i
 
 
-# print(points_team)
+        
+
+
+print(pt_player_stats)
+
+
+
+
+
+print(input_stats_df)
+print(output_kpi_df)
+print(games_team)
+
+
 
 
 
