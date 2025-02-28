@@ -532,41 +532,56 @@ print(points_team)
 ##########
 # Points-Player
 ##########
-# Calc pt_player_o, pt_player_d, pt_player_tot
-# Calc pss_player_o, pss_player_d, pss_player_tot
-print(points_player_columns)
-for i in range(len(points_team)):
-    for j in range(len(players_df)):
-        # player_id = players_df[]
-        # if in points_team[i, "lineup"]
-        # points_player.loc[i, 'pss_player_o'] = points_team.loc[i, 'blocks'] +  points_team.loc[i, 'start_offensive_pt'] ? 1 : 0
-        # points_player.loc[i, 'pss_player_d'] = points_team.loc[i, 'tovs'] +  points_team.loc[i, 'start_offensive_pt'] ? 0 : 1
-        # points_player.loc[i, 'pss_player_tot'] = points_team.loc[i, 'tovs'] + points_team.loc[i, 'blocks'] +  1
-        i
+# Note: to save db space we save only possession where a specific player has played. So if for a certain possession_id and player_id there is no record, it means that that player didn't played that possession => pt_played_tot
+print(points_team)
+points_player = pd.DataFrame(columns=['point_id', 'player_id', 'pss_played_o', 'pss_played_d', 'pss_played_tot', 'pt_played_o', 'pt_played_d', 'pt_played_tot'])
+
+# Loop through points_team
+for point_idx, point in points_team.iterrows():
+    lineup = point['lineup']  # This is already a list of integers
+    if pd.isna(point['blocks']):
+        point['blocks'] = 0
+    if pd.isna(point['tovs']):
+        point['tovs'] = 0
+    if point_idx == 10:
+        print(points_player)
+    # Loop through players_df
+    for player_idx, player in players_df.iterrows():
+        jersey_number = player['jersey_number']  # This is also an integer
+
+        # Check if the player is in the lineup
+        if str(jersey_number) in lineup:
+            # Calculate offensive and defensive stats
+            pss_player_o = int(point['blocks']) + int(1 if point['start_offensive_pt'] else 0)
+            pss_player_d = int(point['tovs']) + int((0 if point['start_offensive_pt'] else 1))
+            pss_player_tot = int(point['blocks']) + int(point['tovs']) + 1
+
+            # Determine if player played on offense or defense
+            pt_played_o = point['start_offensive_pt']
+            pt_played_d = not point['start_offensive_pt']
+            pt_played_tot = True
+
+            # Append the row to points_player
+            points_player = pd.concat([points_player, pd.DataFrame([{
+                'point_id': point['point_id'],
+                'player_id': player_idx,  # <- using actual player_id now
+                'pss_played_o': pss_player_o,
+                'pss_played_d': pss_player_d,
+                'pss_played_tot': pss_player_tot,
+                'pt_played_o': pt_played_o,
+                'pt_played_d': pt_played_d,
+                'pt_played_tot': pt_played_tot
+            }])], ignore_index=True)
+
+# print("points_player")
+# print(points_player[points_player['player_id'] == 0])
+# print(points_player[points_player['player_id'] == 15])
+# print(points_player[points_player['player_id'] == 16])
 
 
-        
 
 
-print(pt_player_stats)
-
-
-
-
-
-print(input_stats_df)
-print(output_kpi_df)
-print(games_team)
-
-
-
-
-
-
-
-
-
-# Calculation Coposed Fields: clutch_point, scored_us
+# Calculation Composed Fields: clutch_point, scored_us
 # Clutch Point Definition:
 # 3pt left to the game point
 # 2pt left to the ht_point
@@ -578,6 +593,68 @@ print(games_team)
 # "scored_us":bool,"scored_ps":bool,"score_us_ps":int,"score_opp_ps":int,
 # team_gm
 # "tot_blocks","tot_tovs","ht_blocks","ht_tovs","tot_break_us","tot_break_opp","ht_break_us","ht_break_opp","final_score_us","final_score_opp","ht_score_us","ht_score_opp"
+#TODO: NEXT CLUTCH
+# # # # # # # clutch_game_diff = 3  # 2 + 1
+# # # # # # # clutch_ht_val = 3     # 2 + 1
+# # # # # # # clutch_game_val = 4   # 3 + 1
+# # # # # # # for game_id in games_team['game_id'].unique():
+# # # # # # #     game_points = points_team[points_team['game_id'] == game_id]
+    
+# # # # # # #     # Get the highest scores in the game
+# # # # # # #     max_ht_score = max(game_points['score'].max(), 0)  # Max half-time score
+# # # # # # #     max_final_score = max(game_points['score'].max(), 0)  # Max final score
+
+# # # # # # #     for idx, point in game_points.iterrows():
+# # # # # # #         score_us = point['score']
+# # # # # # #         score_diff = abs(score_us - game_points['score'].shift().fillna(10))
+
+# # # # # # #         # Check if the point qualifies as "clutch"
+# # # # # # #         is_clutch = (
+# # # # # # #             (score_diff <= clutch_game_diff) and
+# # # # # # #             (
+# # # # # # #                 (max_ht_score - score_us < clutch_ht_val) or
+# # # # # # #                 (max_final_score - score_us < clutch_game_val)
+# # # # # # #             )
+# # # # # # #         )
+
+# # # # # # #         # Update the 'clutch_point' column
+# # # # # # #         points_team.at[idx, 'clutch_point'] = is_clutch
+
+# # # # # # # print(games_team)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# print(pt_player_stats)
+# print(input_stats_df)
+# print(output_kpi_df)
+# print(games_team)
+
+
+
+
+
+
+
+
+
 
 # Pseudo-code
 # clutch_game_diff = 3  # 2 + 1
@@ -601,32 +678,6 @@ print(games_team)
 
 
 
-#TODO: NEXT CLUTCH
-# # # # # # # # clutch_game_diff = 3  # 2 + 1
-# # # # # # # # clutch_ht_val = 3     # 2 + 1
-# # # # # # # # clutch_game_val = 4   # 3 + 1
-# # # # # # # # for game_id in games_team['game_id'].unique():
-# # # # # # # #     game_points = points_team[points_team['game_id'] == game_id]
-    
-# # # # # # # #     # Get the highest scores in the game
-# # # # # # # #     max_ht_score = max(game_points['score'].max(), 0)  # Max half-time score
-# # # # # # # #     max_final_score = max(game_points['score'].max(), 0)  # Max final score
-
-# # # # # # # #     for idx, point in game_points.iterrows():
-# # # # # # # #         score_us = point['score']
-# # # # # # # #         score_diff = abs(score_us - game_points['score'].shift().fillna(10))
-
-# # # # # # # #         # Check if the point qualifies as "clutch"
-# # # # # # # #         is_clutch = (
-# # # # # # # #             (score_diff <= clutch_game_diff) and
-# # # # # # # #             (
-# # # # # # # #                 (max_ht_score - score_us < clutch_ht_val) or
-# # # # # # # #                 (max_final_score - score_us < clutch_game_val)
-# # # # # # # #             )
-# # # # # # # #         )
-
-# # # # # # # #         # Update the 'clutch_point' column
-# # # # # # # #         points_team.at[idx, 'clutch_point'] = is_clutch
 
 
 

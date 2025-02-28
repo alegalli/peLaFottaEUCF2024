@@ -1,0 +1,58 @@
+PROBLEM
+Ultimate Frisbee is a sport in continuous growth that is experiencing its first momemnts of professionism. 
+High Level Players approach training and game weeks with rigor and are rewarded with professional coaching staffs.
+In 2024, at Europen Ultimate Club Finals, the 2nd most competitive league in the World, a couple of fields out of 16 available record the games played. {TODO: check fields number}
+Bologna Flying Disc La Fotta wants to get back the Euorpean gold medal that was hanging on its neck in 2019 and 2022. {TODO: check years when CUSB won EUCF} 
+Persuaded by the most Physical Defence in Europe, as well as consciuos the strenghts of the other top seeds, the team had a clear ambition. {TODO: is better "purpose", "goal", "objective", "aim", "intention", "target"?} 
+I looked for an edge {TODO: is better "competitive advantage", "leverage", "upper end"} by providing knowledge to the Head Coach. 
+Since most of the games cannot be rewatched later for enjoyment, nor to be studied for tactical advantage, I've come up with a solution to review a game as detailed as possible.
+Most of the High Level Coaching Staff in Ultimate take player stats of the game: how many points each player is in the lineup for each game, and, that's all. At least is something, it would be cool to gather all of those lineups in a public database.
+In my experience as an Ultimate Frisbee Coach I polished my Stats Taking. 
+Right now, a person, that doesn't have to instruct the whole team, can take the following stats, the most important, in a single A4 paper: {NOTE: yes, it should be automated by an app}
+
+DATA GATHERING:
+TEAM STATS
+ - POINT-TO-POINT Stats
+   - lineups
+   - results
+   - offence/defence
+   - gender m/w (mixed division only)
+   - number of Turnover
+ - foreach DISC POSSESSION
+   - offence set play
+   - defensive strategy
+   - active game time 
+HYSTORY foreach Player
+ - POINT-TO-POINT Stats
+   - Positive:
+     - Throws/Catches 
+       - #Hucks
+       - #Flows
+       - #Breaks
+       - #Skys
+       - #Swings
+       - #Overtake throws
+       - #Something special
+       - #Assist
+       - #Goals
+     - Defence
+       - #Blocks
+       - #Help defence (involved in the creation of the turnover)
+   - Negative:
+     - Offence
+       - #Throwaways
+       - #Bad/Unforced throwaways
+       - #Drops
+     - Defence
+       - #Open side catches
+       - #Breaks throws
+       - #Deep catches
+
+
+
+
+HOW TO IMPROVE:
+1) Better way of saving data: (ei. in points_player most of the player, everybody exept for 7, don't play and don't have any stats on each point. We can reduce the memory usage by a factor of m where m is the number of players.)
+
+
+
