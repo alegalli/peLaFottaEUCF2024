@@ -9,21 +9,16 @@ cleaned_data_dir = Path('cleaned_data')
 input_files = list(data_dir.glob("Stats La FOTTA EUCF 2024 - *.csv"))
 tot = "data/Stats La FOTTA EUCF 2024 - Tot.csv"
 
-# Initialize data structures
-# players = []
-# stats =[]
-# games = []
-# points = []
-# possessions = []
-# events = []
-
 # Players
 players = pd.read_csv(tot, usecols=[0,1])
 players.rename(columns={'Unnamed: 0': 'jersey_number', 'Unnamed: 1': 'name'}, inplace=True)
 players['team'] = 'BFD La Fotta'
 players.dropna(inplace=True)
 players['jersey_number'] = players['jersey_number'].astype('int')
-players = players[['name', 'jersey_number','team']]
+
+# for player_idx, player in players.iterrows():
+players['player_id'] = list(range(0, len(players['name']))) #[player_idx] = player_idx
+players = players[['player_id','name', 'jersey_number','team']]
 # print(players.to_string())
 
 players_df = pd.DataFrame(players)
@@ -48,37 +43,21 @@ stat_recurrency = []
 # player stats 24 elems
 stat_short_names = ['S', 'D', 'HD', 'LT', 'T', 'P', 'Assist', 'Mete', 'Possesses Played Offence','Possesses Played Defence','Possesses Played Tot', 'Mete g att','Mete g dif','Mete g tot', 'Mga att (min)', '(sec)', 'Mga dif (min)', '(sec).1', 'Mga tot (min)', '(sec).2']
 #not going to add info not strictly related to players AND points eg: clutch_point, special_line, break, scored_us, start_offensive_pt (shared in team_points, go find them there) # TODO: I think I can remove the time stats in player_points and put them in team_points, other than team_game
-stat_names = ["super","block","help_defence","terrible_throw","throwaway","drop","assist","score","pss_played_o","pss_played_d","pss_played_tot","pts_played_o","pts_played_d","pts_played_tot","min_played_o","sec_played_o","min_played_d","sec_played_d","min_played_tot","sec_played_tot"] 
+stat_names = ["super","block","help_defence","terrible_throw","throwaway","drop","assist","score","pss_played_o","pss_played_d","pss_played_tot","pts_played_o","pts_played_d","pts_played_tot","min_played_o","sec_played_o","min_played_d","sec_played_d","min_played_tot","sec_played_tot"]
 # stat_names_gm = ["super","block","help_defence","terrible_throw","throwaway","drop","assist","score","pss_played_o","pss_played_d","pss_played_tot","pts_played_o","pts_played_d","pts_played_tot","min_played_o","sec_played_o","min_played_d","sec_played_d","min_played_tot","sec_played_tot"]
 stat_recurrency = ["pt","pt","pt","pt","pt","pt","ps","ps","pt","pt","pt","pt","pt","pt","pt","pt","pt","pt","pt","pt"] # ps=ps+pt+gm, pt=pt+gm, gm=gm
-stat_dtype_pt = ["int","int","int","int","int","int","bool","bool","int","int","int","bool","bool","bool","int","int","int","int","int","int"] # 
-stat_dtype_gm = ["int"]*len(stat_names) # 
+stat_dtype_pt = ["int","int","int","int","int","int","bool","bool","int","int","int","bool","bool","bool","int","int","int","int","int","int"] #
+stat_dtype_gm = ["int"]*len(stat_names) #
 stat_owners = ["player"]*len(stat_names)
 stat_important = ['', '!', '!', '!', '!', '!', '', '', '', '', '!', '', '', '!', '', '', '', '', '', ''] # [""]*len(stat_names)
-# print(len(kpi_names))
-# print(len(stat_important))
-# print(len(stat_important))
+
 #team stats: 19 elems, Lineup.dtype = [], Break.dtype = bool
 t_stat_short_names = ["","","","In Campo","Blocks","Tovs","Break","","A/D","","","","","","Schema A","Schema D","Storia neg","Storia pos","Assist","Meta","","","","","","","","","","","","","game_phase"]
 t_stat_names = ["min_pt","sec_pt","special_line","lineup","blocks","tovs","break","clutch_point","start_offensive_pt","offensive_ps","scored_us","scored_ps","score_us_pt","score_opp_pt","set_play_o","d_tactic","negative_hystory","positive_hystory","assistmen","scorer","tot_blocks","tot_tovs","ht_blocks","ht_tovs","tot_break_us","tot_break_opp","ht_break_us","ht_break_opp","final_score_us","final_score_opp","ht_score_us","ht_score_opp","game_phase"]
-# t_stat_names = ["min_pt","sec_pt","special_line","lineup","blocks","tovs","break","clutch_point","start_offensive_pt","offensive_ps","scored_us","scored_ps","score_us_pt","score_opp_pt","set_play_o","d_tactic","negative_hystory","positive_hystory","assistmen","scorer","tot_blocks","tot_tovs","ht_blocks","ht_tovs","tot_break_us","tot_break_opp","ht_break_us","ht_break_opp","final_score_us","final_score_opp","ht_score_us","ht_score_opp"]
 t_stat_recurrency = ["pt","pt","pt","pt","pt","pt","pt","pt","pt","ps","pt","ps","pt","pt","pt","pt","pt","pt","ps","ps","gm","gm","gm","gm","gm","gm","gm","gm","gm","gm","gm","gm","gm"] # lineup is per point, we still don't manage perfectly the injury subs
 t_stat_dtype = ["int","int","bool","[7]","int","int","bool","bool","bool","bool","bool","bool","int","int","string","string","string","string","int","int","int","int","int","int","int","int","int","int","int","int","int","int","string"]
 t_stat_owners = ["team"]*len(t_stat_names)
 t_stat_important = ['', '', '', '!', '', '', '!', '!', '!', '!', '!', '!', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '!'] # [""]*len(t_stat_names)
-
-# print(len(stat_short_names))
-# print(len(stat_names))
-# print(len(stat_recurrency))
-# print(len(stat_dtype_pt))
-# print(len(stat_owners))
-# print(len(stat_important))
-
-# print(len(t_stat_short_names))
-# print(len(t_stat_names))
-# print(len(t_stat_recurrency))
-# print(len(t_stat_dtype))
-# print(len(t_stat_owners))
 
 input_stats = {
     'short_names': stat_short_names+t_stat_short_names,
@@ -96,23 +75,16 @@ input_stats_df = pd.DataFrame(input_stats)
 
 
 
-#For Advanced KPI (output_stats or something else) => 
+#For Advanced KPI (output_stats or something else) =>
 # Ricerche = [,'Blocks linea D', 'Blocks/meteg D', 'Break seg D', 'Break/meteg D','TOV linea O', 'TOV/meteg O', 'Break sub O', 'Break/meteg O']
 # def_kpi.csv
 kpi_names = ["possessions_points","o_possessions_points","d_possessions_points","player_pm","scoring_impact","tov_recovery_impact","break_efficiency","impact_metric","possessions_points_X","o_possessions_points_X","d_possessions_points_X","team_pm_X","scoring_impact_X","tov_recovery_impact_X","break_efficiency_X","impact_metric_X"]
 kpi_recurrency = ["","","","","","","","","","","","","","","",""] # Not on the single game but a weighted average for all of them
 kpi_owners = ["player","player","player","player","player","player","player","player","team","team","team","team","team","team","team","team"] # ["player"]*len(kpi_names)
 # kpi_recurrency = ["","","","","","","","","","","","","","","",""]
-kpi_dtype = ["float"]*len(kpi_names) # ["float","float","float","float","float","","","","",""] # ["float"]*len(kpi_names) 
+kpi_dtype = ["float"]*len(kpi_names) # ["float","float","float","float","float","","","","",""] # ["float"]*len(kpi_names)
 kpi_description = ["#pss_played_tot/#pts_played_tot","#pss_played_o/#pts_played_o","#pss_played_d/#pts_played_d","plus-minus=TODO: ...","pt where player in lineup #scored_us / #pss_played_o","pt where player in lineup, ps where tov_rec_ps=(start_offensive_pt && !offensive_ps): #(tov_rec_ps && !scored_ps) / #tov_rec_ps","pt where player in lineup, ps where break_chance_ps=(!start_offensive_ps && offensive_ps): #break / #break_chance_ps","scoring_impact+tov_recovery_impact+break_efficiency, to weight considering pts_played_o, pts_played_d","","","","","","","",""]
 kpi_stats_needed = [["pts_played_tot","pss_played_tot"],["pts_played_o","pss_played_o"],["pts_played_d","pss_played_d"],[],["lineup","scored_us","pss_played_o"],["lineup","start_offensive_pt","offensive_ps","scored_ps"],["lineup","start_offensive_ps","offensive_ps","break"],[],[],[],[],[],[],[],[],[]]
-
-# print(len(kpi_names))
-# print(len(kpi_owners))
-# print(len(kpi_dtype))
-# print(len(kpi_description))
-# print(len(kpi_recurrency))
-# print(len(kpi_stats_needed))
 
 output_kpi = {
     'names': kpi_names,
@@ -126,14 +98,12 @@ output_kpi_df = pd.DataFrame(output_kpi)
 # output_kpi_df.to_csv(cleaned_data_dir / "def_kpi_df.csv", index=False)
 
 
-
-
 # Games
-#TODO: add columns: 
+#TODO: add columns:
 # - us_score
 # - opp_score
 # - us_ht_score
-# - opp_ht_score 
+# - opp_ht_score
 dates = []
 possible_stakes = ['quarti','semi','final', 'pool']
 opponents = []
@@ -170,54 +140,10 @@ for (i, file) in enumerate(input_files):
 # Stats to add: ['pts_played_o', 'pts_played_d', 'pts_played_tot', 'tot_blocks', 'tot_tovs', 'ht_blocks', 'ht_tovs', 'tot_break_us', 'tot_break_opp', 'ht_break_us', 'ht_break_opp', 'final_score_us', 'final_score_opp', 'ht_score_us', 'ht_score_opp']
 # DataFrame select column values
 def_game_stats = input_stats_df[input_stats_df.recurrency == "gm"]
-# print(def_game_stats)
-# # DataFrame select column
-# print(def_game_stats[["names","owners"]])
-# # DataFrame column toList
-# print(def_game_stats["names"].tolist())
-# # DataFrame row toList
-# print(def_game_stats.iloc[4,:].values.tolist())
-
-def calc_gm_player():
-    for (i, file) in enumerate(game_files):
-        # Opponent:
-        # opponents[i]
-        pass
 
 
-    pass
-
-def calc_gm_team():
-    #for BADSKID: from row that starts with "Tot", columns: 10,11
-    #tot_blocks in 10,31 
-    #tot_tovs in 11,31 
-    #ht_blocks to_calc 
-    #ht_tovs da to_calc
-
-    pass
-
-
-##BIG BIG NOTE: more important to start with the important stats, later we can recover the others.
-
-
-gm_player = calc_gm_player()
-gm_team = calc_gm_team()
-
-
-# print(opponents)
-# print(game_files)
 games_df = pd.DataFrame({'opponent': opponents, 'stakes': stakes, 'date': dates})
-# games = games[['opponent', 'stakes','date']] # 27,28,29/09/24
-# print(opponents)
-# print(stakes)
-# print(dates)
-
-# print(games_df.to_string())
 # games_df.to_csv(cleaned_data_dir / "games.csv", index=False)
-
-
-
-
 
 
 #points.csv
@@ -228,44 +154,8 @@ games_df = pd.DataFrame({'opponent': opponents, 'stakes': stakes, 'date': dates}
 # 2pt or less difference (difficult to score more than 2 consecutive breaks)
 def_pt_stats = input_stats_df[input_stats_df.recurrency == "pt"]
 # print(def_pt_stats)
-
-def calc_pt_player():
-    pass
-
-def calc_pt_team():
-    pass
-
-
-#possessions.csv
-pt_player = calc_pt_player()
-pt_team = calc_pt_team()
-
-
-
-
-
-
-
-
-
-
-
-
 def_ps_stats = input_stats_df[input_stats_df.recurrency == "ps"]
 # print(def_ps_stats)
-def calc_ps_player():
-    pass
-def calc_ps_team():
-    pass
-
-ps = calc_ps_player()
-ps = calc_ps_team()
-
-
-
-
-
-
 
 
 ####################
@@ -293,7 +183,7 @@ def extract_table3(df, tot_row):
         raise ValueError("Could not find the last numeric row for table 3.")
     end_index = numeric_values[numeric_values].index[-1]
 
-    # Extract table 
+    # Extract table
     table3 = df.loc[start_index:end_index, :last_col_index].reset_index(drop=True)
     table3.columns = header_row[:last_col_index + 1]
     table3 = table3[table3['name'].notna()]
@@ -329,10 +219,10 @@ def extract_tables(filepath, last_point_id):
 
     # Table 2: Row starting with "Tot"
     tot_A_row = df[df.iloc[:, 0].astype(str).str.contains('Tot', na=False)].index[0]
-    # TODO: trying to recover the data in a list instead of a DataFrame
-    data_table2 = [df.iloc[tot_A_row, 10:14].tolist()]
-    if (i==0):
-        col_table2 = ["tot_blocks", "tot_tovs", "tot_breaks_us", "tot_breaks_opp"]
+    # # TODO: trying to recover the data in a list instead of a DataFrame
+    # data_table2 = [df.iloc[tot_A_row, 10:14].tolist()]
+    # if (i==0):
+    #     col_table2 = ["tot_blocks", "tot_tovs", "tot_breaks_us", "tot_breaks_opp"]
     table2 = pd.DataFrame([df.iloc[tot_A_row, 10:14].tolist()], columns=["tot_blocks", "tot_tovs", "tot_breaks_us", "tot_breaks_opp"])
     # print(table2)
 
@@ -348,7 +238,7 @@ def extract_tables(filepath, last_point_id):
     # print(table4)
 
     # return data_table1, column_table1,data_table2, column_table2,data_table3, column_table3,data_table4, column_table4, point_id
-    return table1, table2, table3, table4, point_id 
+    return table1, table2, table3, table4, point_id
 
 
 
@@ -368,44 +258,15 @@ for (i, file) in enumerate(game_files):
     tables3.append(table3)
     tables4.append(table4)
 
-# # Display results
-# print("Table 1:")
-# # print(tables1)
-# # print(tables1.head())
-# print("\nTable 2:")
-# print(tables2)
-# print("\nTable 3:")
-# print(tables3)
-# # print(tables3.head())
-# print("\nTable 4:")
-# print(tables4)
-
 points_team = pd.DataFrame(columns=tables1[0].columns)
-# print(points_team)
 print("games_team")
 # TODO: I know that I should save the data on lists and then only later work with dfs, to redo
 games_team = pd.concat([pd.concat(tables2, axis=0, ignore_index=True),pd.concat(tables4, axis=0, ignore_index=True)],axis=1)
 points_team = pd.concat(tables1, axis=0, ignore_index=True)
 print(points_team)
 
-# points_player = pd.concat(tables3, axis=0, ignore_index=True)
 games_player = pd.concat(tables3, axis=0, ignore_index=True)
 
-# print(points_player)
-# print(points_player.columns)
-# games_df["game_id"] = range(1, len(games_df) + 1)
-# points_team_df = tables1.merge(games_df[["game_id"]], on="game_id", how="left")
-# points_player_df = tables3.merge(games_df[["game_id"]], on="game_id", how="left")
-# print(points_team_df)
-# print(points_player_df)
-# print(games_team)
-# print(points_team)
-# print(points_player)
-# print(games_team.columns[games_team.columns.duplicated()])
-
-# print(def_game_stats)
-# print(def_pt_stats)
-# print()
 pt_player_stats = input_stats_df[input_stats_df.recurrency == "pt"][input_stats_df.owners == "player"].names.reindex()
 ps_player_stats = input_stats_df[input_stats_df.recurrency == "ps"][input_stats_df.owners == "player"].names.reindex()
 gm_player_stats = input_stats_df[input_stats_df.recurrency == "gm"][input_stats_df.owners == "player"].names.reindex()
@@ -443,27 +304,8 @@ in_campo = points_team.pop('In Campo')
 points_team.insert(3, 'In Campo', in_campo)
 points_team.insert(7, 'clutch_point', np.nan) #'') # TODO: calc clutch_point & scored_us
 points_team.insert(9, 'scored_us', np.nan)
-# print(points_team)
-# print(points_team.columns)
-# print(len(points_team.columns))
 points_team.insert(10, 'score_us_pt', np.nan) #from ps_team_stats
 points_team.insert(11, 'score_opp_pt', np.nan)
-# print(points_team)
-# print(points_team.columns)
-# print(len(points_team.columns))
-# # points_team.insert(18, 'assistmen', np.nan)
-# points_team.insert(19, 'scorer', np.nan)
-# print(points_team.columns)
-# print(len(points_team.columns))
-# print(pt_team_stats)
-# print(len(pt_team_stats))
-# print(ps_team_stats)
-# print(len(ps_team_stats))
-# print(points_team.shape)
-# print(pt_team_stats.to_list()+ps_team_stats.to_list()[2:]+points_team.columns.to_list()[18:])
-# print(len(pt_team_stats.to_list()+ps_team_stats.to_list()[2:]+points_team.columns.to_list()[18:]))
-# team_ps
-# "scored_us":bool,"scored_ps":bool,"score_us_ps":int,"score_opp_ps":int,
 
 points_team.columns = pt_team_stats.to_list()+ps_team_stats.to_list()[2:]+points_team.columns.to_list()[18:]
 # print(points_team.columns)
@@ -525,7 +367,6 @@ for i in range(len(points_team)):
         points_team.loc[i, 'break'] = True
     else:
         points_team.loc[i, 'break'] = False
-# print(points_team[points_team['game_id'] == 1][['game_id', 'scored_us', 'score_us_pt', 'score_opp_pt', 'scorer', 'game_phase']])
 # print(points_team)
 
 
@@ -533,7 +374,7 @@ for i in range(len(points_team)):
 # Points-Player
 ##########
 # Note: to save db space we save only possession where a specific player has played. So if for a certain possession_id and player_id there is no record, it means that that player didn't played that possession => pt_played_tot
-points_player = pd.DataFrame(columns=['point_id', 'player_id', 'pss_played_o', 'pss_played_d', 'pss_played_tot', 'pt_played_o', 'pt_played_d', 'pt_played_tot'])
+points_player = pd.DataFrame(columns=['point_id', 'player_id', 'name', 'pss_played_o', 'pss_played_d', 'pss_played_tot', 'pt_played_o', 'pt_played_d', 'pt_played_tot'])
 
 # Loop through points_team
 for point_idx, point in points_team.iterrows():
@@ -542,11 +383,13 @@ for point_idx, point in points_team.iterrows():
         point['blocks'] = 0
     if pd.isna(point['tovs']):
         point['tovs'] = 0
-    if point_idx == 10:
-        print(points_player)
+    # if point_idx == 10:
+        # print(points_player)
     # Loop through players_df
     for player_idx, player in players_df.iterrows():
         jersey_number = player['jersey_number']  # This is also an integer
+        player_name = player['name']
+        player_id = player['player_id']
 
         # Check if the player is in the lineup
         if str(jersey_number) in lineup:
@@ -563,7 +406,8 @@ for point_idx, point in points_team.iterrows():
             # Append the row to points_player
             points_player = pd.concat([points_player, pd.DataFrame([{
                 'point_id': point['point_id'],
-                'player_id': player_idx,  # <- using actual player_id now
+                'player_id': player_id,  # <- using actual player_id now
+                'name': player_name,
                 'pss_played_o': pss_player_o,
                 'pss_played_d': pss_player_d,
                 'pss_played_tot': pss_player_tot,
@@ -573,12 +417,9 @@ for point_idx, point in points_team.iterrows():
             }])], ignore_index=True)
 
 print("points_player")
-# print(points_player[points_player['player_id'] == 0])
-# print(points_player[points_player['player_id'] == 15])
-# print(points_player[points_player['player_id'] == 16])
 
 points_player.to_csv(cleaned_data_dir / "points_player.csv", index=False)
-print(input_stats_df)
+# print(input_stats_df)
 
 
 # Calculation Composed Fields: clutch_point, scored_us
@@ -600,7 +441,7 @@ clutch_game_val = 4   # 3 + 1
 for game_id in games_team['game_id'].unique():
     # gt = games_team[games_team['game_id'] == game_id]
     game_points = points_team[points_team['game_id'] == game_id]
-    
+
     # Get the highest scores in the game
     max_ht_score = max(games_team.loc[game_id,'ht_score_us'], games_team.loc[game_id,'ht_score_opp'])  # Max half-time score
     min_ht_score = min(games_team.loc[game_id,'ht_score_us'], games_team.loc[game_id,'ht_score_opp'])  # Max half-time score
@@ -621,77 +462,15 @@ for game_id in games_team['game_id'].unique():
         )
         points_team.loc[idx, 'clutch_point'] = is_clutch
 
-        # Update the 'clutch_point' column
-        # points_team.at[idx, 'clutch_point'] = is_clutch
-
-
 # print(points_team)
 # print(points_team[points_team['point_id'] > 120])
-
-points_team.to_csv(cleaned_data_dir / "points_team.csv", index=False)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# points_team.to_csv(cleaned_data_dir / "points_team.csv", index=False)
 
 
 # print(pt_player_stats)
 # print(input_stats_df)
 # print(output_kpi_df)
 # print(games_team)
-
-
-
-
-
-
-
-
-
-
-# Pseudo-code
-# clutch_game_diff = 3  # 2 + 1
-# clutch_ht_val = 3     # 2 + 1
-# clutch_game_val = 4   # 3 + 1
-# for gm in games_team:
-#     max_ht_score = max(gm_ht_score_us, gm.ht_score_opp) 
-#     max_final_score = max(gm.final_score_us, gm.final_score_opp)
-#     for ps in points_team[points_team.game_id = gm].list():
-#         if(abs(team_ps.score_us_ps - team_ps.score_opp_ps) < clutch_game_diff):
-#             if((max_ht_score - team_ps.score_us_ps < clutch_ht_val) or (max_ht_score - team_ps.score_opp_ps < clutch_ht_val)):
-#                 team_ps[gm][ps] = True
-#                 pass
-#             elif((max_final_score - team_ps.score_us_ps < clutch_game_val) or (max_final_score - team_ps.score_opp_ps < clutch_game_val)):
-#                 team_ps[gm][ps] = True
-#                 pass
-#             else:
-#                 team_ps[gm][ps] = False
-# print(points_team)
-
-
-
-
-
-
-
-
-
-
-
 
 # print(games_team)
 # print(games_team)
@@ -713,7 +492,7 @@ points_team.to_csv(cleaned_data_dir / "points_team.csv", index=False)
 # print(points_player)# points_player
 
 # print(points_player[list(points_player.columns[0:2]) + list(points_player.columns[10:])])
-# # TODO: A different method to select 
+# # TODO: A different method to select
 # mete_g_att = points_player.pop('Mete g att')
 # mete_g_dif = points_player.pop('Mete g dif')
 # mete_g_tot = points_player.pop('Mete g tot')
@@ -756,6 +535,7 @@ games_player.columns = (
     list(ps_player_stats.to_list()) + # assist, score
     list(games_player.columns[10:]) # pss_o,d,tot, game_id
 )
+print(games_player)
 # points_player.columns = points_player.columns[0:2]+pt_player_stats.to_list()[0:6]+ps_player_stats.to_list()+points_player.columns[10:] # TODO: to calc possessions_played and move points_played into game stats
 # print(points_player)
 
@@ -770,6 +550,156 @@ games_player.columns = (
 #     'dtype': stat_dtype+t_stat_dtype
 # }
 # input_stats_df = pd.DataFrame(input_stats)
+
+
+
+
+
+
+
+
+
+
+
+###################
+# KPI Computation #
+###################
+
+# print(output_kpi_df)
+# possessions_points =
+# o_possessions_points =
+# d_possessions_points =
+
+# 1) The first input to loc command is the filter for the index and then the second is the column.
+# df.loc[df['Year'] == '2019', 'Arrived'].sum()
+# 2) Another approach here, in case you wanted to have the sum for every year, would be to use the groupby operation:
+# per_year = df.groupby('Year')['Arrived'].sum()
+# This would give you a series, and you could then see the value for 2019 specifically with:
+# per_year['2019']
+
+
+
+
+# print(points_player.groupby(['player_id']))
+# grouped_df = points_player.groupby('player_id')
+
+# for key, item in grouped_df:
+#     print(grouped_df.get_group(key), "\n\n")
+
+# # points_player_sum = points_player.join(players_df.set_index('player_id'), on='player_id').groupby(['player_id','name','jersey_number','team']).sum()
+# points_player_sum = points_player.groupby(['player_id','name']).sum()
+# # print(points_player_sum)
+# # points_player_sum = points_player_sum['pss_player_o','pss_player_d','pss_player_tot','pt_played_d','pt_played_tot'].sum()
+
+# # print(points_player_sum)
+# def safe_divide(numerator, denominator):
+#     return numerator / denominator if denominator != 0 else 0
+
+
+# possessions_points = points_player_sum.apply(
+#     lambda row: safe_divide(row['pss_played_tot'], row['pt_played_tot']), axis=1
+# )
+# o_possessions_points = points_player_sum.apply(
+#     lambda row: safe_divide(row['pss_played_o'], row['pt_played_o']), axis=1
+# )
+# d_possessions_points = points_player_sum.apply(
+#     lambda row: safe_divide(row['pss_played_d'], row['pt_played_d']), axis=1
+# )
+
+
+# print(points_player.merge(players_df))
+
+
+
+
+# points_player_sum = points_player.groupby(['player_id', 'name']).sum().reset_index()
+
+
+# def safe_divide(numerator, denominator):
+#     return numerator / denominator if denominator != 0 else 0
+
+# # o_possessions_points: sum of pss_played_o when pt_played_o == True, divided by total pt_played_o
+# o_possessions_points = points_player_sum.apply(
+#     lambda row: safe_divide(
+#         points_player_sum.loc[points_player_sum['pt_played_o'] == True, 'pss_played_o'].sum(),
+#         points_player_sum['pt_played_o'].sum()
+#     )
+# )
+
+# # d_possessions_points: sum of pss_played_d when pt_played_d == True, divided by total pt_played_d
+# d_possessions_points = points_player_sum.apply(
+#     lambda row: safe_divide(
+#         points_player_sum.loc[points_player_sum['pt_played_d'] == True, 'pss_played_d'].sum(),
+#         points_player_sum['pt_played_d'].sum()
+#     )
+# )
+
+# # tot_possessions_points: sum of pss_played_tot when pt_played_tot == True, divided by total pt_played_tot
+# tot_possessions_points = points_player_sum.apply(
+#     lambda row: safe_divide(
+#         points_player_sum.loc[points_player_sum['pt_played_tot'] == True, 'pss_played_tot'].sum(),
+#         points_player_sum['pt_played_tot'].sum()
+#     )
+# )
+
+
+# print(tot_possessions_points)
+# # print(o_possessions_points)
+# # print(d_possessions_points)
+# # print(points_player_sum)
+# # print(points_player[(points_player['player_id']==7) & (points_player['pt_played_d']==True)])
+# # grouped_df = points_player_sum.groupby('player_id')
+
+# # for key, item in grouped_df:
+# #     print(grouped_df.get_group(key), "\n\n")
+
+# Grouping the data without summing yet
+grouped = points_player.groupby(['player_id', 'name'])
+
+# Create the new DataFrame with calculated possession points per player
+possession_points_per_player = grouped.agg({
+    'pss_played_o': lambda x: x[points_player.loc[x.index, 'pt_played_o'] == True].sum(),
+    'pt_played_o': 'sum',
+    'pss_played_d': lambda x: x[points_player.loc[x.index, 'pt_played_d'] == True].sum(),
+    'pt_played_d': 'sum',
+    'pss_played_tot': lambda x: x[points_player.loc[x.index, 'pt_played_tot'] == True].sum(),
+    'pt_played_tot': 'sum'
+}).reset_index()
+
+# Safe division function
+def safe_divide(numerator, denominator):
+    return numerator / denominator if denominator != 0 else 0
+
+# Calculate possession points
+possession_points_per_player['o_possessions_points'] = possession_points_per_player.apply(
+    lambda row: safe_divide(row['pss_played_o'], row['pt_played_o']), axis=1
+)
+possession_points_per_player['d_possessions_points'] = possession_points_per_player.apply(
+    lambda row: safe_divide(row['pss_played_d'], row['pt_played_d']), axis=1
+)
+possession_points_per_player['tot_possessions_points'] = possession_points_per_player.apply(
+    lambda row: safe_divide(row['pss_played_tot'], row['pt_played_tot']), axis=1
+)
+
+# Drop the intermediate columns if you don’t need them
+possession_points_per_player = possession_points_per_player[
+    ['player_id', 'name', 'o_possessions_points', 'd_possessions_points', 'tot_possessions_points']
+]
+
+print(possession_points_per_player)
+
+kpi_df = possession_points_per_player.merge(players_df)
+# kpi_df.to_csv(cleaned_data_dir / "kpi.csv", index=False)
+
+
+
+
+
+
+
+
+
+
 
 
 
