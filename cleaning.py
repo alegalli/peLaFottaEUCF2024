@@ -95,7 +95,7 @@ output_kpi = {
 }
 output_kpi_df = pd.DataFrame(output_kpi)
 # print(output_kpi_df.to_string())
-# output_kpi_df.to_csv(cleaned_data_dir / "def_kpi_df.csv", index=False)
+output_kpi_df.to_csv(cleaned_data_dir / "def_kpi.csv", index=False)
 
 
 # Games
@@ -467,25 +467,6 @@ for game_id in games_team['game_id'].unique():
 # points_team.to_csv(cleaned_data_dir / "points_team.csv", index=False)
 
 
-# print(pt_player_stats)
-# print(input_stats_df)
-# print(output_kpi_df)
-# print(games_team)
-
-# print(games_team)
-# print(games_team)
-
-
-
-
-# print(points_team.columns)
-# print("points_team")
-# print(points_team.columns)
-# print(games_player)
-# print(games_team)
-
-
-
 # # for (i, col) in enumerate(pt_player_stats):
 #     points_player.insert(2+i, col, np.nan)
 
@@ -674,16 +655,25 @@ def safe_divide(numerator, denominator):
 possession_points_per_player['o_possessions_points'] = possession_points_per_player.apply(
     lambda row: safe_divide(row['pss_played_o'], row['pt_played_o']), axis=1
 )
+possession_points_per_player['o_possessions'] = possession_points_per_player.apply(
+    lambda row: row['pss_played_o'], axis=1
+)
 possession_points_per_player['d_possessions_points'] = possession_points_per_player.apply(
     lambda row: safe_divide(row['pss_played_d'], row['pt_played_d']), axis=1
+)
+possession_points_per_player['d_possessions'] = possession_points_per_player.apply(
+    lambda row: row['pss_played_d'], axis=1
 )
 possession_points_per_player['tot_possessions_points'] = possession_points_per_player.apply(
     lambda row: safe_divide(row['pss_played_tot'], row['pt_played_tot']), axis=1
 )
+possession_points_per_player['tot_possessions'] = possession_points_per_player.apply(
+    lambda row: row['pss_played_tot'], axis=1
+)
 
 # Drop the intermediate columns if you don’t need them
 possession_points_per_player = possession_points_per_player[
-    ['player_id', 'name', 'o_possessions_points', 'd_possessions_points', 'tot_possessions_points']
+    ['player_id', 'name', 'o_possessions_points', 'o_possessions', 'd_possessions_points', 'd_possessions', 'tot_possessions_points', 'tot_possessions',]
 ]
 
 print(possession_points_per_player)
@@ -696,8 +686,62 @@ kpi_df = possession_points_per_player.merge(players_df)
 
 
 
+# Other KPIs:
+# scoring_impact =lineup, scored_us, pss_played_o # no need to check pss_played_o>0 because I'm not counting the points played
+# when in lineup:
+#   scored_us.sum() / pss_played_o.sum()
+# tov_recovery_impact =lineup, start_offensive_pt, tovs, blocks
+# break_efficiency = lineup, start_offensive_pt, tovs, blocks, break
+# impact_metric = #TOBEDEFINED
 
 
+print(points_player.merge(players, how="inner").merge(points_team, how="outer", on="point_id")[['point_id', 'player_id', 'name', 'jersey_number', 'lineup', 'scored_us', 'pss_played_o', 'pss_played_d', 'start_offensive_pt', 'break']])
+pt_pl_tm_kpi = points_player.merge(points_team, how="outer", on="point_id")[['point_id', 'player_id', 'name', 'lineup', 'scored_us', 'pss_played_o', 'pss_played_d', 'start_offensive_pt', 'break']]
+
+# scoring_impact = 
+
+
+import pandas as pd
+import numpy as np
+
+# Group by player_id
+grouped = pt_pl_tm_kpi.groupby('player_id', group_keys=False)
+
+# Calculate scoring_impact: total points scored / total offensive possessions played
+scoring_impact = grouped.apply(
+    lambda g: g['scored_us'].sum() / g['pss_played_o'].sum()
+    if g['pss_played_o'].sum() != 0 else np.nan
+)
+
+# Calculate tov_recovery_impact: (tov_rec_ps - taken_breaks) / tov_rec_ps
+tov_recovery_impact = grouped.apply(
+    lambda g: (
+        (g.loc[g['start_offensive_pt'] == True, 'pss_played_d'].sum() -
+         g.loc[g['start_offensive_pt'] == True, 'break'].sum()) /
+        g.loc[g['start_offensive_pt'] == True, 'pss_played_d'].sum()
+    ) if g.loc[g['start_offensive_pt'] == True, 'pss_played_d'].sum() != 0 else np.nan
+)
+
+# Calculate break_efficiency: scored_breaks / break_chances
+break_efficiency = grouped.apply(
+    lambda g: (
+        g.loc[g['start_offensive_pt'] == False, 'break'].sum() /
+        g.loc[g['start_offensive_pt'] == False, 'pss_played_o'].sum()
+    ) if g.loc[g['start_offensive_pt'] == False, 'pss_played_o'].sum() != 0 else np.nan
+)
+
+# Combine into a single DataFrame
+kpi_df2 = pd.DataFrame({
+    'player_id': scoring_impact.index,
+    'scoring_impact': scoring_impact.values,
+    'tov_recovery_impact': tov_recovery_impact.values,
+    'break_efficiency': break_efficiency.values
+}).reset_index(drop=True)
+
+print(players.merge(kpi_df).merge(kpi_df2))
+kpi_df = players.merge(kpi_df).merge(kpi_df2)
+
+kpi_df.to_csv(cleaned_data_dir / "kpi.csv", index=False)
 
 
 

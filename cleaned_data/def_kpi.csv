@@ -5,8 +5,8 @@ d_possessions_points,player,float,#pss_played_d/#pts_played_d,"['pts_played_d', 
 player_pm,player,float,plus-minus=TODO: ...,[]
 scoring_impact,player,float,pt where player in lineup #scored_us / #pss_played_o,"['lineup', 'scored_us', 'pss_played_o']"
 tov_recovery_impact,player,float,"pt where player in lineup, ps where tov_rec_ps=(start_offensive_pt && !offensive_ps): #(tov_rec_ps && !scored_ps) / #tov_rec_ps","['lineup', 'start_offensive_pt', 'offensive_ps', 'scored_ps']"
-break_efficiency,player,float,"pt where player in lineup, ps where break_chance_ps=(!start_offensive_ps && offensive_ps): #break / #break_chance_ps","['lineup', 'start_offensive_ps', 'offensive_ps']"
-impact_metric,player,float,scoring_impact+tov_recovery_impact+break_efficiency,[]
+break_efficiency,player,float,"pt where player in lineup, ps where break_chance_ps=(!start_offensive_ps && offensive_ps): #break / #break_chance_ps","['lineup', 'start_offensive_ps', 'offensive_ps', 'break']"
+impact_metric,player,float,"scoring_impact+tov_recovery_impact+break_efficiency, to weight considering pts_played_o, pts_played_d",[]
 possessions_points_X,team,float,,[]
 o_possessions_points_X,team,float,,[]
 d_possessions_points_X,team,float,,[]
