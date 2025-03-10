@@ -8,6 +8,7 @@ data_dir = Path('data')
 cleaned_data_dir = Path('cleaned_data')
 input_files = list(data_dir.glob("Stats La FOTTA EUCF 2024 - *.csv"))
 tot = "data/Stats La FOTTA EUCF 2024 - Tot.csv"
+# tot = data_dir.glob("Stats La FOTTA EUCF 2024 - Tot.csv")
 
 # Players
 players = pd.read_csv(tot, usecols=[0,1])
@@ -18,7 +19,10 @@ players['jersey_number'] = players['jersey_number'].astype('int')
 
 # for player_idx, player in players.iterrows():
 players['player_id'] = list(range(0, len(players['name']))) #[player_idx] = player_idx
-players = players[['player_id','name', 'jersey_number','team']]
+players['role'] = ['H']*4 + ['Y']*4 + ['C']*3 + ['H']*5 + ['Y']*6 + ['C']*3
+players['line'] = ['O']*11 + ['D']*14
+# print(players)
+players = players[['player_id','name', 'jersey_number','role','line','team']]
 # print(players.to_string())
 
 players_df = pd.DataFrame(players)
@@ -70,7 +74,7 @@ input_stats = {
 }
 input_stats_df = pd.DataFrame(input_stats)
 # print(input_stats_df.to_string())
-# input_stats_df.to_csv(cleaned_data_dir / "def_stats.csv", index=False)
+input_stats_df.to_csv(cleaned_data_dir / "def_stats.csv", index=False)
 
 
 
@@ -143,7 +147,7 @@ def_game_stats = input_stats_df[input_stats_df.recurrency == "gm"]
 
 
 games_df = pd.DataFrame({'opponent': opponents, 'stakes': stakes, 'date': dates})
-# games_df.to_csv(cleaned_data_dir / "games.csv", index=False)
+games_df.to_csv(cleaned_data_dir / "games.csv", index=False)
 
 
 #points.csv
@@ -282,16 +286,11 @@ gm_team_stats = input_stats_df[input_stats_df.recurrency == "gm"][input_stats_df
 #################
 # Empty Points-Player columns TODO: recalc table from team_pt stats
 # NOTE: do not initialize with NaN values, TODO: add possession_id
-# points_player = points_player[list(points_player.columns[0:2])]
-# print(pt_player_stats)
-# points_player = pd.DataFrame({})
 points_player_columns = ( #
-    list(players_df.columns[0:2]) + # jersey_number, name
+    list(players_df.columns[0:3]) + # jersey_number, name, role
     list(input_stats_df[input_stats_df.owners == "player"].names.to_list()) + #all player stats
     ["point_id","game_id"]
 )
-# print(len(points_player_columns))
-# print(points_player_columns)
 # TODO: recalc from Points-Team
 
 
@@ -374,7 +373,7 @@ for i in range(len(points_team)):
 # Points-Player
 ##########
 # Note: to save db space we save only possession where a specific player has played. So if for a certain possession_id and player_id there is no record, it means that that player didn't played that possession => pt_played_tot
-points_player = pd.DataFrame(columns=['point_id', 'player_id', 'name', 'pss_played_o', 'pss_played_d', 'pss_played_tot', 'pt_played_o', 'pt_played_d', 'pt_played_tot'])
+points_player = pd.DataFrame(columns=['point_id', 'player_id', 'name', 'role', 'line', 'pss_played_o', 'pss_played_d', 'pss_played_tot', 'pt_played_o', 'pt_played_d', 'pt_played_tot'])
 
 # Loop through points_team
 for point_idx, point in points_team.iterrows():
@@ -388,8 +387,6 @@ for point_idx, point in points_team.iterrows():
     # Loop through players_df
     for player_idx, player in players_df.iterrows():
         jersey_number = player['jersey_number']  # This is also an integer
-        player_name = player['name']
-        player_id = player['player_id']
 
         # Check if the player is in the lineup
         if str(jersey_number) in lineup:
@@ -406,8 +403,10 @@ for point_idx, point in points_team.iterrows():
             # Append the row to points_player
             points_player = pd.concat([points_player, pd.DataFrame([{
                 'point_id': point['point_id'],
-                'player_id': player_id,  # <- using actual player_id now
-                'name': player_name,
+                'player_id': player['player_id'],  # <- using actual player_id now
+                'name': player['name'],
+                'role': player['role'],
+                'line': player['line'],
                 'pss_played_o': pss_player_o,
                 'pss_played_d': pss_player_d,
                 'pss_played_tot': pss_player_tot,
@@ -464,7 +463,9 @@ for game_id in games_team['game_id'].unique():
 
 # print(points_team)
 # print(points_team[points_team['point_id'] > 120])
-# points_team.to_csv(cleaned_data_dir / "points_team.csv", index=False)
+points_team.to_csv(cleaned_data_dir / "points_team.csv", index=False)
+
+
 
 
 # # for (i, col) in enumerate(pt_player_stats):
@@ -510,13 +511,21 @@ for game_id in games_team['game_id'].unique():
 # )
 
 # TODO: easy compile games_player
-games_player.columns = (
-    list(games_player.columns[0:2]) + # jersey_number, name
-    list(pt_player_stats.to_list()[0:6]) + #TODO: change base stats to game
-    list(ps_player_stats.to_list()) + # assist, score
-    list(games_player.columns[10:]) # pss_o,d,tot, game_id
-)
+games_player = players_df[["name","role","line"]].merge(games_player.merge(players_df[["name","player_id"]], how="outer", on=["name"]), how="outer", on=["name"])
 print(games_player)
+# games_player.columns = (
+#     list(games_player.columns[0:2]) + # jersey_number, name, role
+#     [] +
+#     list(pt_player_stats.to_list()[0:6]) + #TODO: change base stats to game
+#     list(ps_player_stats.to_list()) + # assist, score
+#     list(games_player.columns[10:]) # pss_o,d,tot, game_id
+# )
+games_player.to_csv(cleaned_data_dir / "games_player.csv", index=False)
+print(games_player)
+
+print('points_player_clutch')
+points_player_clutch = points_player.merge(points_team)
+points_player_clutch = points_player_clutch[points_player_clutch['clutch_point'] == True][points_player.columns].reset_index(drop=True)
 # points_player.columns = points_player.columns[0:2]+pt_player_stats.to_list()[0:6]+ps_player_stats.to_list()+points_player.columns[10:] # TODO: to calc possessions_played and move points_played into game stats
 # print(points_player)
 
@@ -558,132 +567,68 @@ print(games_player)
 # This would give you a series, and you could then see the value for 2019 specifically with:
 # per_year['2019']
 
-
-
-
-# print(points_player.groupby(['player_id']))
-# grouped_df = points_player.groupby('player_id')
-
-# for key, item in grouped_df:
-#     print(grouped_df.get_group(key), "\n\n")
-
-# # points_player_sum = points_player.join(players_df.set_index('player_id'), on='player_id').groupby(['player_id','name','jersey_number','team']).sum()
-# points_player_sum = points_player.groupby(['player_id','name']).sum()
-# # print(points_player_sum)
-# # points_player_sum = points_player_sum['pss_player_o','pss_player_d','pss_player_tot','pt_played_d','pt_played_tot'].sum()
-
-# # print(points_player_sum)
-# def safe_divide(numerator, denominator):
-#     return numerator / denominator if denominator != 0 else 0
-
-
-# possessions_points = points_player_sum.apply(
-#     lambda row: safe_divide(row['pss_played_tot'], row['pt_played_tot']), axis=1
-# )
-# o_possessions_points = points_player_sum.apply(
-#     lambda row: safe_divide(row['pss_played_o'], row['pt_played_o']), axis=1
-# )
-# d_possessions_points = points_player_sum.apply(
-#     lambda row: safe_divide(row['pss_played_d'], row['pt_played_d']), axis=1
-# )
-
-
-# print(points_player.merge(players_df))
-
-
-
-
-# points_player_sum = points_player.groupby(['player_id', 'name']).sum().reset_index()
-
-
-# def safe_divide(numerator, denominator):
-#     return numerator / denominator if denominator != 0 else 0
-
-# # o_possessions_points: sum of pss_played_o when pt_played_o == True, divided by total pt_played_o
-# o_possessions_points = points_player_sum.apply(
-#     lambda row: safe_divide(
-#         points_player_sum.loc[points_player_sum['pt_played_o'] == True, 'pss_played_o'].sum(),
-#         points_player_sum['pt_played_o'].sum()
-#     )
-# )
-
-# # d_possessions_points: sum of pss_played_d when pt_played_d == True, divided by total pt_played_d
-# d_possessions_points = points_player_sum.apply(
-#     lambda row: safe_divide(
-#         points_player_sum.loc[points_player_sum['pt_played_d'] == True, 'pss_played_d'].sum(),
-#         points_player_sum['pt_played_d'].sum()
-#     )
-# )
-
-# # tot_possessions_points: sum of pss_played_tot when pt_played_tot == True, divided by total pt_played_tot
-# tot_possessions_points = points_player_sum.apply(
-#     lambda row: safe_divide(
-#         points_player_sum.loc[points_player_sum['pt_played_tot'] == True, 'pss_played_tot'].sum(),
-#         points_player_sum['pt_played_tot'].sum()
-#     )
-# )
-
-
-# print(tot_possessions_points)
-# # print(o_possessions_points)
-# # print(d_possessions_points)
-# # print(points_player_sum)
-# # print(points_player[(points_player['player_id']==7) & (points_player['pt_played_d']==True)])
-# # grouped_df = points_player_sum.groupby('player_id')
-
-# # for key, item in grouped_df:
-# #     print(grouped_df.get_group(key), "\n\n")
-
-# Grouping the data without summing yet
-grouped = points_player.groupby(['player_id', 'name'])
-
-# Create the new DataFrame with calculated possession points per player
-possession_points_per_player = grouped.agg({
-    'pss_played_o': lambda x: x[points_player.loc[x.index, 'pt_played_o'] == True].sum(),
-    'pt_played_o': 'sum',
-    'pss_played_d': lambda x: x[points_player.loc[x.index, 'pt_played_d'] == True].sum(),
-    'pt_played_d': 'sum',
-    'pss_played_tot': lambda x: x[points_player.loc[x.index, 'pt_played_tot'] == True].sum(),
-    'pt_played_tot': 'sum'
-}).reset_index()
-
 # Safe division function
 def safe_divide(numerator, denominator):
     return numerator / denominator if denominator != 0 else 0
 
-# Calculate possession points
-possession_points_per_player['o_possessions_points'] = possession_points_per_player.apply(
-    lambda row: safe_divide(row['pss_played_o'], row['pt_played_o']), axis=1
-)
-possession_points_per_player['o_possessions'] = possession_points_per_player.apply(
-    lambda row: row['pss_played_o'], axis=1
-)
-possession_points_per_player['d_possessions_points'] = possession_points_per_player.apply(
-    lambda row: safe_divide(row['pss_played_d'], row['pt_played_d']), axis=1
-)
-possession_points_per_player['d_possessions'] = possession_points_per_player.apply(
-    lambda row: row['pss_played_d'], axis=1
-)
-possession_points_per_player['tot_possessions_points'] = possession_points_per_player.apply(
-    lambda row: safe_divide(row['pss_played_tot'], row['pt_played_tot']), axis=1
-)
-possession_points_per_player['tot_possessions'] = possession_points_per_player.apply(
-    lambda row: row['pss_played_tot'], axis=1
-)
+def calc_possessions(grouped, pt_pl):
+    # Create the new DataFrame with calculated possession points per player
+    possession_points_per_player = grouped.agg({
+        'pss_played_o': lambda x: x[pt_pl.loc[x.index, 'pt_played_o'] == True].sum(),
+        'pt_played_o': 'sum',
+        'pss_played_d': lambda x: x[pt_pl.loc[x.index, 'pt_played_d'] == True].sum(),
+        'pt_played_d': 'sum',
+        'pss_played_tot': lambda x: x[pt_pl.loc[x.index, 'pt_played_tot'] == True].sum(),
+        'pt_played_tot': 'sum'
+    }).reset_index()
 
-# Drop the intermediate columns if you don’t need them
-possession_points_per_player = possession_points_per_player[
-    ['player_id', 'name', 'o_possessions_points', 'o_possessions', 'd_possessions_points', 'd_possessions', 'tot_possessions_points', 'tot_possessions',]
-]
 
-print(possession_points_per_player)
+    # Calculate possession points
+    possession_points_per_player['o_possessions_points'] = possession_points_per_player.apply(
+        lambda row: safe_divide(row['pss_played_o'], row['pt_played_o']), axis=1
+    )
+    possession_points_per_player['o_possessions'] = possession_points_per_player.apply(
+        lambda row: row['pss_played_o'], axis=1
+    )
+    possession_points_per_player['d_possessions_points'] = possession_points_per_player.apply(
+        lambda row: safe_divide(row['pss_played_d'], row['pt_played_d']), axis=1
+    )
+    possession_points_per_player['d_possessions'] = possession_points_per_player.apply(
+        lambda row: row['pss_played_d'], axis=1
+    )
+    possession_points_per_player['tot_possessions_points'] = possession_points_per_player.apply(
+        lambda row: safe_divide(row['pss_played_tot'], row['pt_played_tot']), axis=1
+    )
+    possession_points_per_player['tot_possessions'] = possession_points_per_player.apply(
+        lambda row: row['pss_played_tot'], axis=1
+    )
+    # Drop the intermediate columns if you don’t need them
+    return possession_points_per_player[
+        ['player_id', 'name', 'pt_played_o', 'o_possessions_points', 'o_possessions', 'pt_played_d', 'd_possessions_points', 'd_possessions', 'pt_played_tot', 'tot_possessions_points', 'tot_possessions',]
+    ]
+
+# Grouping the data without summing yet
+grouped = points_player.groupby(['player_id', 'name'])
+possession_points_per_player = calc_possessions(grouped, points_player)
+# print(possession_points_per_player)
 
 kpi_df = possession_points_per_player.merge(players_df)
-# kpi_df.to_csv(cleaned_data_dir / "kpi.csv", index=False)
+kpi_df.to_csv(cleaned_data_dir / "kpi.csv", index=False)
 
 
+# Grouping the data without summing yet
+clutch_grouped = points_player_clutch.groupby(['player_id', 'name'])
+clutch_possession_points_per_player = calc_possessions(clutch_grouped, points_player_clutch)
+# print(possession_points_per_player)
 
+clutch_kpi_df = clutch_possession_points_per_player.merge(players_df)
+clutch_kpi_df.to_csv(cleaned_data_dir / "clutch_kpi.csv", index=False)
+print('clutch poss')
+# print(clutch_kpi_df)
+# print(kpi_df)
 
+# print(points_player)
+# print(points_player_clutch)
 
 
 # Other KPIs:
@@ -693,61 +638,58 @@ kpi_df = possession_points_per_player.merge(players_df)
 # tov_recovery_impact =lineup, start_offensive_pt, tovs, blocks
 # break_efficiency = lineup, start_offensive_pt, tovs, blocks, break
 # impact_metric = #TOBEDEFINED
+def calc_kpi(grouped):
+    # Calculate scoring_impact: total points scored / total offensive possessions played
+    scoring_impact = grouped.apply(
+        lambda g: g['scored_us'].sum() / g['pss_played_o'].sum()
+        if g['pss_played_o'].sum() != 0 else np.nan
+    )
+
+    # Calculate tov_recovery_impact: (tov_rec_ps - taken_breaks) / tov_rec_ps
+    tov_recovery_impact = grouped.apply(
+        lambda g: (
+            (g.loc[g['start_offensive_pt'] == True, 'pss_played_d'].sum() -
+            g.loc[g['start_offensive_pt'] == True, 'break'].sum()) /
+            g.loc[g['start_offensive_pt'] == True, 'pss_played_d'].sum()
+        ) if g.loc[g['start_offensive_pt'] == True, 'pss_played_d'].sum() != 0 else np.nan
+    )
+
+    # Calculate break_efficiency: scored_breaks / break_chances
+    break_efficiency = grouped.apply(
+        lambda g: (
+            g.loc[g['start_offensive_pt'] == False, 'break'].sum() /
+            g.loc[g['start_offensive_pt'] == False, 'pss_played_o'].sum()
+        ) if g.loc[g['start_offensive_pt'] == False, 'pss_played_o'].sum() != 0 else np.nan
+    )
+    return pd.DataFrame({
+        'player_id': scoring_impact.index,
+        'scoring_impact': scoring_impact.values,
+        'tov_recovery_impact': tov_recovery_impact.values,
+        'break_efficiency': break_efficiency.values
+    }).reset_index(drop=True)
 
 
-print(points_player.merge(players, how="inner").merge(points_team, how="outer", on="point_id")[['point_id', 'player_id', 'name', 'jersey_number', 'lineup', 'scored_us', 'pss_played_o', 'pss_played_d', 'start_offensive_pt', 'break']])
-pt_pl_tm_kpi = points_player.merge(points_team, how="outer", on="point_id")[['point_id', 'player_id', 'name', 'lineup', 'scored_us', 'pss_played_o', 'pss_played_d', 'start_offensive_pt', 'break']]
 
-# scoring_impact = 
-
-
-import pandas as pd
-import numpy as np
-
-# Group by player_id
+# print(points_player.merge(players, how="inner").merge(points_team, how="outer", on="point_id")[['point_id', 'player_id', 'name', 'jersey_number', 'lineup', 'scored_us', 'pss_played_o', 'pss_played_d', 'start_offensive_pt', 'break']])
+pt_pl_tm_kpi = points_player.merge(points_team, how="outer", on="point_id")[['point_id', 'player_id', 'name', 'role', 'line', 'lineup', 'scored_us', 'pss_played_o', 'pss_played_d', 'start_offensive_pt', 'break']]
 grouped = pt_pl_tm_kpi.groupby('player_id', group_keys=False)
+kpi_df2 = calc_kpi(grouped)
 
-# Calculate scoring_impact: total points scored / total offensive possessions played
-scoring_impact = grouped.apply(
-    lambda g: g['scored_us'].sum() / g['pss_played_o'].sum()
-    if g['pss_played_o'].sum() != 0 else np.nan
-)
-
-# Calculate tov_recovery_impact: (tov_rec_ps - taken_breaks) / tov_rec_ps
-tov_recovery_impact = grouped.apply(
-    lambda g: (
-        (g.loc[g['start_offensive_pt'] == True, 'pss_played_d'].sum() -
-         g.loc[g['start_offensive_pt'] == True, 'break'].sum()) /
-        g.loc[g['start_offensive_pt'] == True, 'pss_played_d'].sum()
-    ) if g.loc[g['start_offensive_pt'] == True, 'pss_played_d'].sum() != 0 else np.nan
-)
-
-# Calculate break_efficiency: scored_breaks / break_chances
-break_efficiency = grouped.apply(
-    lambda g: (
-        g.loc[g['start_offensive_pt'] == False, 'break'].sum() /
-        g.loc[g['start_offensive_pt'] == False, 'pss_played_o'].sum()
-    ) if g.loc[g['start_offensive_pt'] == False, 'pss_played_o'].sum() != 0 else np.nan
-)
-
-# Combine into a single DataFrame
-kpi_df2 = pd.DataFrame({
-    'player_id': scoring_impact.index,
-    'scoring_impact': scoring_impact.values,
-    'tov_recovery_impact': tov_recovery_impact.values,
-    'break_efficiency': break_efficiency.values
-}).reset_index(drop=True)
-
-print(players.merge(kpi_df).merge(kpi_df2))
 kpi_df = players.merge(kpi_df).merge(kpi_df2)
+# print(kpi_df)
 
 kpi_df.to_csv(cleaned_data_dir / "kpi.csv", index=False)
+print('kpi')
 
 
+clutch_pt_pl_tm_kpi = points_player_clutch.merge(points_team, how="outer", on="point_id")[['point_id', 'player_id', 'name', 'role', 'line', 'lineup', 'scored_us', 'pss_played_o', 'pss_played_d', 'start_offensive_pt', 'break']].dropna(subset=['player_id','name'])
+clutch_grouped = clutch_pt_pl_tm_kpi.groupby('player_id', group_keys=False)
+clutch_kpi_df2 = calc_kpi(clutch_grouped)
 
-
-
-
+print('clutch kpi')
+clutch_kpi_df = players.merge(clutch_kpi_df).merge(clutch_kpi_df2)
+print(clutch_kpi_df)
+clutch_kpi_df.to_csv(cleaned_data_dir / "clutch_kpi.csv", index=False)
 
 
 

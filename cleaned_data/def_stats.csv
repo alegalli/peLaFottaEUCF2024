@@ -1,49 +1,54 @@
-short_names,names,!,recurrency,owners,dtype
-S,super,,pt,player,int
-D,block,!,pt,player,int
-HD,help_defence,!,pt,player,int
-LT,terrible_throw,!,pt,player,int
-T,throwaway,!,pt,player,int
-P,drop,!,pt,player,int
-Assist,assist,,ps,player,int
-Mete,score,,ps,player,int
-Mete g att,pts_played_o,,gm,player,int
-Mete g dif,pts_played_d,,gm,player,int
-Mete g tot,pts_played_tot,!,gm,player,int
-Possesses Played Offence,pss_played_o,,pt,player,int
-Possesses Played Defence,pss_played_d,,pt,player,int
-Possesses Played Tot,pss_played_tot,!,pt,player,int
-Mga att (min),min_played_o,,pt,player,int
-(sec),sec_played_o,,pt,player,int
-Mga dif (min),min_played_d,,pt,player,int
-(sec).1,sec_played_d,,pt,player,int
-Mga tot (min),min_played_tot,,pt,player,int
-(sec).2,sec_played_tot,,pt,player,int
-In Campo,lineup,!,pt,team,[7]
-Blocks,blocks,,pt,team,int
-Tovs,tovs,,pt,team,int
-Break,break,!,pt,team,bool
-A/D,start_offensive_pt,!,pt,team,bool
-,offensive_ps,!,ps,team,bool
-,scored_us,!,pt,team,bool
-,scored_ps,!,ps,team,bool
-,score_us_ps,,ps,team,int
-,score_opp_ps,,ps,team,int
-Schema A,set_play_o,,pt,team,string
-Schema D,d_tactic,,pt,team,string
-Storia neg,negative_hystory,,pt,team,string
-Storia pos,positive_hystory,,pt,team,string
-Assist,assistmen,,ps,team,int
-Meta,scorer,,ps,team,int
-,tot_blocks,,gm,team,int
-,tot_tovs,,gm,team,int
-,ht_blocks,,gm,team,int
-,ht_tovs,,gm,team,int
-,tot_break_us,,gm,team,int
-,tot_break_opp,,gm,team,int
-,ht_break_us,,gm,team,int
-,ht_break_opp,,gm,team,int
-,final_score_us,,gm,team,int
-,final_score_opp,,gm,team,int
-,ht_score_us,,gm,team,int
-,ht_score_opp,,gm,team,int
+short_names,names,!,recurrency,owners,dtype_ps,dtype_gm
+S,super,,pt,player,int,int
+D,block,!,pt,player,int,int
+HD,help_defence,!,pt,player,int,int
+LT,terrible_throw,!,pt,player,int,int
+T,throwaway,!,pt,player,int,int
+P,drop,!,pt,player,int,int
+Assist,assist,,ps,player,bool,int
+Mete,score,,ps,player,bool,int
+Possesses Played Offence,pss_played_o,,pt,player,int,int
+Possesses Played Defence,pss_played_d,,pt,player,int,int
+Possesses Played Tot,pss_played_tot,!,pt,player,int,int
+Mete g att,pts_played_o,,pt,player,bool,int
+Mete g dif,pts_played_d,,pt,player,bool,int
+Mete g tot,pts_played_tot,!,pt,player,bool,int
+Mga att (min),min_played_o,,pt,player,int,int
+(sec),sec_played_o,,pt,player,int,int
+Mga dif (min),min_played_d,,pt,player,int,int
+(sec).1,sec_played_d,,pt,player,int,int
+Mga tot (min),min_played_tot,,pt,player,int,int
+(sec).2,sec_played_tot,,pt,player,int,int
+,min_pt,,pt,team,int,int
+,sec_pt,,pt,team,int,int
+,special_line,,pt,team,bool,bool
+In Campo,lineup,!,pt,team,[7],[7]
+Blocks,blocks,,pt,team,int,int
+Tovs,tovs,,pt,team,int,int
+Break,break,!,pt,team,bool,bool
+,clutch_point,!,pt,team,bool,bool
+A/D,start_offensive_pt,!,pt,team,bool,bool
+,offensive_ps,!,ps,team,bool,bool
+,scored_us,!,pt,team,bool,bool
+,scored_ps,!,ps,team,bool,bool
+,score_us_pt,,pt,team,int,int
+,score_opp_pt,,pt,team,int,int
+Schema A,set_play_o,,pt,team,string,string
+Schema D,d_tactic,,pt,team,string,string
+Storia neg,negative_hystory,,pt,team,string,string
+Storia pos,positive_hystory,,pt,team,string,string
+Assist,assistmen,,ps,team,int,int
+Meta,scorer,,ps,team,int,int
+,tot_blocks,,gm,team,int,int
+,tot_tovs,,gm,team,int,int
+,ht_blocks,,gm,team,int,int
+,ht_tovs,,gm,team,int,int
+,tot_break_us,,gm,team,int,int
+,tot_break_opp,,gm,team,int,int
+,ht_break_us,,gm,team,int,int
+,ht_break_opp,,gm,team,int,int
+,final_score_us,,gm,team,int,int
+,final_score_opp,,gm,team,int,int
+,ht_score_us,,gm,team,int,int
+,ht_score_opp,,gm,team,int,int
+game_phase,game_phase,!,gm,team,string,string
