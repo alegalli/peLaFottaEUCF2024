@@ -583,8 +583,33 @@ def calc_possessions(grouped, pt_pl):
         'pt_played_tot': 'sum'
     }).reset_index()
 
+    # TOCOMPLETE 17/03/2025
+    #     possession_points_per_player = grouped.agg({
+    #     'pss_played_o_o': lambda x: x[x['start_offensive_pt'] == True].sum(),
+    #     'pss_played_o_d': lambda x: x[x['start_offensive_pt'] == False].sum(),
+    #     # 'pss_played_o_d': 'sum',#lambda x: x[pt_pl.loc[x.index, 'pt_played_o'] == True].sum(),
+    #     'pt_played_o': 'sum',
+    #     'pss_played_d_o': lambda x: x[x['start_offensive_pt'] == True].sum(),
+    #     'pss_played_d_d': lambda x: x[x['start_offensive_pt'] == False].sum(),
+    #     # 'pss_played_d_o': 'sum',#lambda x: x[pt_pl.loc[x.index, 'pt_played_o'] == True].sum(),
+    #     'pt_played_d': 'sum',
+    #     'pss_played_tot': lambda x: x[pt_pl.loc[x.index, 'pt_played_tot'] == True].sum(),
+    #     'pt_played_tot': 'sum'
+    # }).reset_index()
 
+
+
+
+    print("possession_points_per_player")
+    print(possession_points_per_player)
     # Calculate possession points
+    # tov_recovery_impact = grouped.apply(
+    #     lambda g: (
+    #         (g.loc[g['start_offensive_pt'] == True, 'pss_played_d'].sum() -
+    #         g.loc[g['start_offensive_pt'] == True, 'break'].sum()) /
+    #         g.loc[g['start_offensive_pt'] == True, 'pss_played_d'].sum()
+    #     ) if g.loc[g['start_offensive_pt'] == True, 'pss_played_d'].sum() != 0 else np.nan
+    # )
     possession_points_per_player['o_possessions_points'] = possession_points_per_player.apply(
         lambda row: safe_divide(row['pss_played_o'], row['pt_played_o']), axis=1
     )
@@ -614,16 +639,16 @@ possession_points_per_player = calc_possessions(grouped, points_player)
 # print(possession_points_per_player)
 
 kpi_df = possession_points_per_player.merge(players_df)
-# kpi_df.to_csv(cleaned_data_dir / "kpi.csv", index=False)
+# # # # kpi_df.to_csv(cleaned_data_dir / "kpi.csv", index=False)
 
 
 # Grouping the data without summing yet
 clutch_grouped = points_player_clutch.groupby(['player_id', 'name'])
 clutch_possession_points_per_player = calc_possessions(clutch_grouped, points_player_clutch)
-# print(possession_points_per_player)
+print(clutch_possession_points_per_player)
 
 clutch_kpi_df = clutch_possession_points_per_player.merge(players_df)
-# clutch_kpi_df.to_csv(cleaned_data_dir / "clutch_kpi.csv", index=False)
+# # # # clutch_kpi_df.to_csv(cleaned_data_dir / "clutch_kpi.csv", index=False)
 print('clutch poss')
 # print(clutch_kpi_df)
 # print(kpi_df)
@@ -682,30 +707,30 @@ def calc_kpi(grouped):
 pt_pl_tm_kpi = points_player.merge(points_team, how="outer", on="point_id")[['point_id', 'player_id', 'name', 'role', 'line', 'lineup', 'scored_us', 'pss_played_o', 'pss_played_d', 'start_offensive_pt', 'break', 'blocks', 'tovs']]
 pt_pl_tm_kpi['blocks'] = pt_pl_tm_kpi['blocks'].fillna(0).astype('uint8')
 pt_pl_tm_kpi['tovs'] = pt_pl_tm_kpi['tovs'].fillna(0).astype('uint8')
-print(pt_pl_tm_kpi.dtypes)
+# print(pt_pl_tm_kpi.dtypes)
 grouped = pt_pl_tm_kpi.groupby('player_id', group_keys=False)
 kpi_df2 = calc_kpi(grouped)
 
 kpi_df = players.merge(kpi_df).merge(kpi_df2)
-print(kpi_df)
+# print(kpi_df)
 
 kpi_df.to_csv(cleaned_data_dir / "kpi.csv", index=False)
-print('kpi')
+# print('kpi')
 
 
 clutch_pt_pl_tm_kpi = points_player_clutch.merge(points_team, how="outer", on="point_id")[['point_id', 'player_id', 'name', 'role', 'line', 'lineup', 'scored_us', 'pss_played_o', 'pss_played_d', 'start_offensive_pt', 'break', 'blocks', 'tovs']].dropna(subset=['player_id','name'])
 clutch_pt_pl_tm_kpi['blocks'] = clutch_pt_pl_tm_kpi['blocks'].fillna(0).astype('uint8')
 clutch_pt_pl_tm_kpi['tovs'] = clutch_pt_pl_tm_kpi['tovs'].fillna(0).astype('uint8')
-print(clutch_pt_pl_tm_kpi.dtypes)
+# print(clutch_pt_pl_tm_kpi.dtypes)
 clutch_grouped = clutch_pt_pl_tm_kpi.groupby('player_id', group_keys=False)
 clutch_kpi_df2 = calc_kpi(clutch_grouped)
 
-print('clutch kpi')
+# print('clutch kpi')
 clutch_kpi_df = players.merge(clutch_kpi_df).merge(clutch_kpi_df2)
 print(clutch_kpi_df)
-print(kpi_df)
+# print(kpi_df)
 clutch_kpi_df.to_csv(cleaned_data_dir / "clutch_kpi.csv", index=False)
 
-
+print(points_player[points_player['name'] == "Martin"])
 
 print("Data extraction complete. Structured files saved.")
